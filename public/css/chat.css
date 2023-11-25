@@ -1,12 +1,9 @@
 body{
     background-color: #f4f7f6;
-    margin-top:20px;
 }
 .card {
     background: #fff;
     transition: .5s;
-    border: 0;
-    margin-bottom: 30000px;
     border-radius: .55rem;
     position: relative;
     width: 100%;
@@ -258,3 +255,4 @@ body{
         overflow-x: auto
     }
 }
+

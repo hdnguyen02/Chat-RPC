@@ -5,7 +5,7 @@ const path = require('path')
 const hbs = require('hbs')
 const bodyParser = require('body-parser')
 const mssql = require('mssql')  
-const { sign } = require('crypto')
+
 
 
 const config = {
@@ -46,7 +46,6 @@ app.use(express.static( 'public'))
 // nên lưu trữ thành object thay vì thành data 
 
 
-
 const rooms = {} // Lưu trữ room trên hệ thống. 
 const roomsDto = {} // không chứa passWord trong hệ thống. 
 const users = []
@@ -77,6 +76,10 @@ function isRoomExist(roomCheck) {
 io.on('connection', socket => { // sự kiến có người dùng kết nối
 
     console.log(`Người dùng đã join ${socket.id}`)
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
     
     socket.on('sendUsername', data => { 
         let user = {idSocket: socket.id, username: data.username}
@@ -93,27 +96,37 @@ io.on('connection', socket => { // sự kiến có người dùng kết nối
             console.log("Sai mật khẩu rồi")
             return 
         }
-        // cho người dùng join vào room
+        let isPassword = room.password ? true : false
         room.users.add(username) 
         socket.join(nameRoom)
+        socket.emit('joinedChatRoom', nameRoom, isPassword)
     })
+
+    socket.on('sendMessage', data => { 
+        console.log("vào đây")
+    
+        let { nameRoom, username, message } =data 
+        // ! Ngay tại chỗ này nên check xem username này có phải là của room đó không 
+        io.to(nameRoom).emit('receiveMessage', {username, message})
+    }) 
 
 
 
     socket.on('newChatRoom',(nameRoom, passwordRoom, username) => { // data: name: password
-        let isPassword = false ? passwordRoom == '' : true
+        let isPassword = !passwordRoom ? false : true
+        let password = isPassword ? passwordRoom : null 
         
         rooms[nameRoom] = { 
-            password: passwordRoom,
+            password,
             users: new Set(username)
         }
 
         roomsDto[nameRoom] = { 
             isPassword, 
             users: new Set(username)
-        }
-        // cho socket join vào cái room đó. 
+        } 
         socket.join(nameRoom)
+        socket.emit('joinedChatRoom', nameRoom, isPassword) 
         io.emit('sendListRoom',roomsDto) // * Thông báo đến tất cả người dùng là có room mới
     })
 })
