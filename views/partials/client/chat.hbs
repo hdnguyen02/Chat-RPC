@@ -1,0 +1,126 @@
+<link rel="stylesheet" href="css/chat.css" />
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<div class="vw-100 overflow-hidden">
+    <div class="row clearfix">
+        <div class="col-lg-12">
+            <div class="card chat-app h-100">
+                <div id="plist" class="people-list">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Search..." />
+                    </div>
+                    {{! * group btn }}
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-success w-100"
+                            data-toggle="modal" data-target="#modelNewChatRoom">new chat room</button>
+                    </div>
+
+
+                    {{! * model }}
+                    <div class="modal" id="modelNewChatRoom" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content shadow-lg border-0">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLongTitle">New chat room</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="name-chat-room">Name<span style="color: red">*</span></label>
+                                        <input name="name-chat-room" type="text" class="form-control" id="name-chat-room" placeholder="Enter name">
+                                    </div>
+                                     <div class="form-group">
+                                        <label for="password-chat-room">password</label>
+                                        <input name="password-chat-room" type="password" class="form-control" placeholder="Enter password">
+                                    </div>
+                                     <div class="form-group">
+                                        <label for="password-chat-room">confirm password</label>
+                                        <input name="confirm-password-chat-room" type="password" class="form-control" placeholder="Enter confirm password">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+
+                                    <button id="btn-new-chat-room" data-dismiss="modal" type="button" class="btn btn-success w-100">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul id="ul-rooms" class="list-unstyled chat-list mt-2 mb-0">
+                        
+                        
+                    </ul>
+                </div>
+                <div class="chat">
+                    {{!-- <div class="chat-header clearfix">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                                    <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar" />
+                                </a>
+                                <div class="chat-about">
+                                    <h6 class="m-b-0">Aiden Chavez</h6>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 hidden-sm text-right">
+          
+                                <a href="javascript:void(0);" class="btn btn-outline-info"><i
+                                        class="fa fa-cogs"></i></a>
+                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-history">
+                        <ul class="m-b-0">
+                            <li class="clearfix">
+                                <div class="message-data text-right">
+                                    <span class="message-data-time">10:10 AM, Today</span>
+                                    <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar" />
+                                </div>
+                                <div class="message other-message float-right">
+                                    Hi Aiden, how are you? How is the project coming along?
+                                </div>
+                            </li>
+                            <li class="clearfix">
+                                <div class="message-data">
+                                    <span class="message-data-time">10:12 AM, Today</span>
+                                </div>
+                                <div class="message my-message">Are we meeting today?</div>
+                            </li>
+                            <li class="clearfix">
+                                <div class="message-data">
+                                    <span class="message-data-time">10:15 AM, Today</span>
+                                </div>
+                                <div class="message my-message">Project has been already
+                                    finished and I have results to show you.</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="chat-message clearfix">
+                        <div class="input-group mb-0">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-send"></i></span>
+                            </div>
+                            <input type="text" class="form-control" placeholder="Enter text here..." />
+                        </div>
+                    </div> --}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{!-- <script src="/js/chat.js"></script> --}}
+    
+
+<style>
+    .modal-backdrop.show {
+        display: none !important;
+    }
+</style>
