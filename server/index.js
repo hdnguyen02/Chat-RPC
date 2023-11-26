@@ -76,14 +76,13 @@ function isRoomExist(roomCheck) {
 io.on('connection', socket => { // sự kiến có người dùng kết nối
 
     console.log(`Người dùng đã join ${socket.id}`)
-
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
     });
     
     socket.on('sendUsername', data => { 
         let user = {idSocket: socket.id, username: data.username}
-        if (isUserExist(user)) return 
+        console.log("có vào đây")
         users.push(user)    
         socket.emit('sendListRoom',roomsDto)
         
@@ -93,21 +92,22 @@ io.on('connection', socket => { // sự kiến có người dùng kết nối
         let room = rooms[nameRoom]
         if (room.password != passwordRoom) { 
             // không thể join vào room này
-            console.log("Sai mật khẩu rồi")
-            return 
+            socket.emit('wrongPasswordChatRoom', 'Sai mật khẩu chat room')
+            return
         }
         let isPassword = room.password ? true : false
         room.users.add(username) 
         socket.join(nameRoom)
-        socket.emit('joinedChatRoom', nameRoom, isPassword)
+        socket.emit('joinedChatRoom', {nameRoom, password:passwordRoom})
     })
 
     socket.on('sendMessage', data => { 
-        console.log("vào đây")
-    
-        let { nameRoom, username, message } =data 
-        // ! Ngay tại chỗ này nên check xem username này có phải là của room đó không 
-        io.to(nameRoom).emit('receiveMessage', {username, message})
+        let { nameRoom, username, message } =data  
+        let time = formaTime(new Date()); 
+        
+
+
+        io.to(nameRoom).emit('receiveMessage', {username, message, time})
     }) 
 
 
@@ -126,11 +126,21 @@ io.on('connection', socket => { // sự kiến có người dùng kết nối
             users: new Set(username)
         } 
         socket.join(nameRoom)
-        socket.emit('joinedChatRoom', nameRoom, isPassword) 
-        io.emit('sendListRoom',roomsDto) // * Thông báo đến tất cả người dùng là có room mới
+        socket.emit('joinedChatRoom',  {nameRoom, password: password}) 
+        io.emit('sendListRoom',roomsDto) 
     })
 })
 
+
+function formaTime(time) {
+    var day = time.getDate().toString().padStart(2, '0');
+    var month = (time.getMonth() + 1).toString().padStart(2, '0'); // Thêm 1 vì tháng bắt đầu từ 0
+    var year = time.getFullYear();
+    var hours = time.getHours().toString().padStart(2, '0');
+    var minutes = time.getMinutes().toString().padStart(2, '0');
+  
+    return `${day}-${month}-${year}, ${hours}:${minutes}`;
+  }
 
 
 
