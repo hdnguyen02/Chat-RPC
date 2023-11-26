@@ -1,9 +1,7 @@
 const express = require('express')
 const http = require('http')
 const socketIO = require('socket.io')
-const path = require('path')
 const hbs = require('hbs')
-const bodyParser = require('body-parser')
 const mssql = require('mssql')  
 
 
@@ -33,7 +31,7 @@ const config = {
 //     });
 // })
 
-const urlencodedParser = bodyParser.urlencoded({ extended: false })  
+
 
 const app = express()  
 const server = http.createServer(app)
@@ -50,31 +48,9 @@ const rooms = {} // Lưu trữ room trên hệ thống.
 const roomsDto = {} // không chứa passWord trong hệ thống. 
 const users = []
 
-// check user exist  
-
-function isUserExist(userCheck) { 
-    users.forEach(user => { 
-        if (userCheck.username == user.username) {
-            return true
-        }
-    })
-    return false 
-}
-
-function isRoomExist(roomCheck) { 
-    rooms.forEach(room => { 
-        if (room.name == roomCheck.name) {
-            return true
-        }
-    })
-    return false 
-}
-
-
 
 // on lắng nghe cái gì đó  
 io.on('connection', socket => { // sự kiến có người dùng kết nối
-
     console.log(`Người dùng đã join ${socket.id}`)
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
@@ -85,28 +61,27 @@ io.on('connection', socket => { // sự kiến có người dùng kết nối
         console.log("có vào đây")
         users.push(user)    
         socket.emit('sendListRoom',roomsDto)
-        
     }) 
 
     socket.on('joinRoom', (nameRoom, passwordRoom, username) => { 
         let room = rooms[nameRoom]
         if (room.password != passwordRoom) { 
-            // không thể join vào room này
-            socket.emit('wrongPasswordChatRoom', 'Sai mật khẩu chat room')
+            socket.emit('notify', 'Sai mật khẩu chat room')
             return
         }
-        let isPassword = room.password ? true : false
-        room.users.add(username) 
+        if (!room.usernames.includes(username)) {
+            room.usernames.push(username) 
+            socket.to(nameRoom).emit("newMember", {member: username, sizeMembers: room.usernames.length})
+        }
+        
         socket.join(nameRoom)
-        socket.emit('joinedChatRoom', {nameRoom, password:passwordRoom})
+        socket.emit('joinedChatRoom', {nameRoom, password:passwordRoom, members: room.usernames})
+        
     })
 
     socket.on('sendMessage', data => { 
         let { nameRoom, username, message } =data  
         let time = formaTime(new Date()); 
-        
-
-
         io.to(nameRoom).emit('receiveMessage', {username, message, time})
     }) 
 
@@ -115,18 +90,20 @@ io.on('connection', socket => { // sự kiến có người dùng kết nối
     socket.on('newChatRoom',(nameRoom, passwordRoom, username) => { // data: name: password
         let isPassword = !passwordRoom ? false : true
         let password = isPassword ? passwordRoom : null 
-        
+
+        let usernames = []
+        usernames.push(username)
         rooms[nameRoom] = { 
             password,
-            users: new Set(username)
+            usernames
         }
 
         roomsDto[nameRoom] = { 
             isPassword, 
-            users: new Set(username)
+            usernames
         } 
         socket.join(nameRoom)
-        socket.emit('joinedChatRoom',  {nameRoom, password: password}) 
+        socket.emit('joinedChatRoom',  {nameRoom, password: password, members: usernames}) 
         io.emit('sendListRoom',roomsDto) 
     })
 })

@@ -3,9 +3,7 @@
 const socket = io("http://localhost:3000")
 let isLogin = true
 let username 
-let joinedRooms = {}
 let rooms = {}
-let isShowRoomChat = false
 let curentChatRoom 
 let curentJoinChatRoom 
 
@@ -22,18 +20,18 @@ const containerRoomChat = $("#container-room-chat")
 const btnCloseModelEpcr =$("#btn-close-model-epcr")
 const btnJoinChatRoom = $("#btn-join-chat-room")
 
-
-
 changeScreen();
-
 
 // * EVENT
 formlogin.addEventListener("submit", function (event) {
   event.preventDefault();
   // ! chưa check
-  username = inputUsername.value
+  username = inputUsername.value.trim()
+  if(username == '') { 
+    alert("Không để trống username!")
+    return
+  }
   socket.emit('sendUsername', {username})
-
   isLogin = false;
   changeScreen();
 });
@@ -101,8 +99,8 @@ function emitSendUserName (data) {
   socket.emit("sendUsername", data);
 }  
 
-socket.on('wrongPasswordChatRoom', data => { 
-  alert("Password chat room không chính xác!")
+socket.on('notify', data => { 
+  alert(data)
 })
 
 socket.on('receiveMessage', data => { 
@@ -137,13 +135,16 @@ socket.on('receiveMessage', data => {
 })
 // nhận lại sự kiện đã join
 socket.on("joinedChatRoom", (data) => {
-  
-  let {nameRoom, password} = data
-  sessionStorage.setItem(nameRoom,password)
 
+  let {nameRoom, password, members} = data
+  console.log(data)
+  sessionStorage.setItem(nameRoom,password)
   curentChatRoom = nameRoom
-  let html = `
-        <div class="chat-header clearfix">
+    let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
+    let html = `
+    <div class="d-flex justify-content-between">
+    <div class="vh-100 w-100">
+    <div class="chat-header clearfix">
         <div class="row">
             <div class="col-lg-6">
                 <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
@@ -151,36 +152,46 @@ socket.on("joinedChatRoom", (data) => {
                 </a>
                 <div class="chat-about">
                     <h6 class="mb-0">${curentChatRoom}</h6>
-                    <small>22 thành viên</small>
+                    <small id="size-members-1">${members.length} thành viên</small>
                 </div>
             </div>
             <div class="col-lg-6 hidden-sm text-right">
-                <a href="javascript:void(0);" class="btn btn-outline-info"><i class="fa fa-cogs"></i></a>
+                <a href="javascript:void(0);" class="btn btn-outline-info"><i
+                        class="fa fa-cogs"></i></a>
             </div>
         </div>
+    </div>
+    <div class="chat-history">
+        <ul id="container-chat-history" class="m-b-0 h-100"
+            style="overflow-y: auto; overflow-x: hidden">
+           
+        </ul>
+    </div>
+    <div class="chat-message clearfix">
+        <div class="input-group mb-0">
+            <div class="input-group-prepend"><span class="input-group-text"><i
+                        class="fa fa-send"></i></span></div>
+            <input onkeydown="onSendMessage(event)" type="text" class="form-control"
+                placeholder="Enter text here..." />
         </div>
-        <div class="chat-history">
-            <ul id="container-chat-history" class="m-b-0 h-100" style="overflow-y: auto; overflow-x: hidden">
-                 
-            </ul>
-        </div>
-        <div class="chat-message clearfix">
-            <div class="input-group mb-0">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-send"></i></span></div>
-                <input onkeydown="onSendMessage(event)" type="text" class="form-control" placeholder="Enter text here..." />
-            </div>
-        </div> 
+    </div>
+    </div>
+    <div class="vh-100" style="width: 280px; border-left: 2px solid #f4f7f6;">
+        <div id="size-members-2" class="d-flex justify-content-center align-items-center" style="height: 10vh;font-weight: 500; ;border-bottom: 2px solid #f4f7f6;" >Thành viên (${members.length})</div>
+        <div> <ul id="ul-members" style="overflow-y: auto; height: 90vh;">${htmlTagLiMember.join('')}</ul> </div>
+    </div>
+    </div>
     `
     containerRoomChat.innerHTML = html
 });
 
+
+
 // * ON
 socket.on("sendListRoom", (roomsDto) => {
-  console.log("sendlistRoom", rooms)
   const ulRooms = $("#ul-rooms");
   rooms = roomsDto;
   let iconScope;
-  // nhận ở đây là object không phải là là array.
   let listRoomHtml = "";
   for (const nameRoom in roomsDto) {
     if (roomsDto[nameRoom].isPassword == true) {
@@ -200,6 +211,13 @@ socket.on("sendListRoom", (roomsDto) => {
   ulRooms.innerHTML = listRoomHtml
 });
 
+socket.on('newMember', data => {
+  let {member, sizeMembers} = data
+  $("#ul-members").innerHTML += `<li>${member}</li>`
+  $("#size-members-1").innerText = `${sizeMembers} thành viên`
+  $("#size-members-2").innerText = `Thành viên (${sizeMembers})`
+})
+
 // * FUNC
 function changeScreen() {
   if (isLogin) {
@@ -208,11 +226,6 @@ function changeScreen() {
   } else {
     containerChat.style.display = "block"
     containerLogin.style.display = "none"
-  }
-
-  // join màn hình nào hay không 
-  if (!isShowRoomChat) { 
-    // tham gia nhóm chat hoặc tạo nhóm chat. 
   }
 }
 
