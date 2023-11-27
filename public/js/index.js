@@ -62,7 +62,7 @@ btnJoinChatRoom.addEventListener('click', function(){
   // sau khi nó nhấp vào tiến hành reset value
   $("#modelEnterPassWordChatRoom").style.display = "none"
   $("input[name='enter-password']").value = ''
-  socket.emit("joinRoom", {nameRoom:curentJoinChatRoom, passwordRoom:textEnterPassword, username})
+  socket.emit("joinChatRoom", {nameRoom:curentJoinChatRoom, passwordRoom:textEnterPassword, username})
 })
 
 
@@ -76,13 +76,13 @@ function handerJoinChat(event) {
     if (password === 'null') {
       password = null
     }
-    socket.emit("joinRoom", {nameRoom,passwordRoom:password , username}) 
+    socket.emit("joinChatRoom", {nameRoom,passwordRoom:password , username}) 
   }
   else if (rooms[nameRoom].isPassword) {
     $("#modelEnterPassWordChatRoom").style.display = "block" 
     curentJoinChatRoom = nameRoom
   } else {
-    socket.emit("joinRoom", {nameRoom,passwordRoom:null , username}) 
+    socket.emit("joinChatRoom", {nameRoom,passwordRoom:null , username}) 
   }
 }
 
@@ -105,7 +105,7 @@ socket.on('notify', data => {
 })
 
 socket.on('receiveMessage', data => { 
-    let {username : usernameSend, message, time} = data
+    let {usernameSend, message, time} = data
     if (username == usernameSend) {  
       $("#container-chat-history").innerHTML += `
         <li class="clearfix">
@@ -136,10 +136,38 @@ socket.on('receiveMessage', data => {
 })
 // nhận lại sự kiện đã join
 socket.on("joinedChatRoom", (data) => {
+  let {nameRoom, password, members, logs} = data
 
+  
 
-  let {nameRoom, password, members} = data
-  console.log(data)
+  let htmlLogs = logs.map(log => {
+    if (username == log.usernameSend) {  
+      return  `
+        <li class="clearfix">
+          <div class="message-data text-right">
+              <small class="message-data-time">${username} (${log.time})</small>
+             
+          </div>
+          <div class="message other-message float-right">
+            ${log.message}
+          </div>
+        </li>`
+    }
+    else { 
+      return `
+        <li class="clearfix">
+            <div class="message-data">
+              <div><smail style="font-size: 14px"></smail></div>
+              <small class="message-data-time">${log.usernameSend} (${log.time})</small>
+            </div>
+            <div class="message my-message">${log.message}</div>
+        </li>`
+    }
+  })
+
+  
+
+  
   sessionStorage.setItem(nameRoom,password)
   curentChatRoom = nameRoom
     let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
@@ -185,6 +213,8 @@ socket.on("joinedChatRoom", (data) => {
     </div>
     `
     containerRoomChat.innerHTML = html
+
+    $("#container-chat-history").innerHTML = htmlLogs.join('')
 });
 
 

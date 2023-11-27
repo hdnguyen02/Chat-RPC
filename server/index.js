@@ -3,9 +3,7 @@ const http = require('http')
 const socketIO = require('socket.io')
 const hbs = require('hbs')
 const mssql = require('mssql')
-
-
-
+const { error } = require('console')
 
 const config = {
     user: 'sa', // thay
@@ -14,13 +12,9 @@ const config = {
     database: 'Chat RPC', // thay
     options: {
         encrypt: true,
-        trustServerCertificate: true // Nếu bạn sử dụng Azure SQL, hãy thêm tùy chọn này
+        trustServerCertificate: true 
     },
 };
-
-
-
-
 
 const app = express()
 const server = http.createServer(app)
@@ -30,14 +24,62 @@ app.set('view engine', 'hbs')
 app.use(express.static('public'))
 
 
-
-
 function getRooms() {
     return new Promise((resolve, reject) => {
         mssql.connect(config, error => {
             if (error) reject(error)
             let request = new mssql.Request()
             const sqlQuery = 'select * from rooms'
+            request.query(sqlQuery)
+                .then(result => {
+                    resolve(result.recordset)
+                })
+                .catch(error => {
+                    reject(error)
+                })
+                .finally(() => {
+                    mssql.close()
+                })
+        })
+    })
+}
+
+
+function getLogOfRoom(nameRoom) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const sqlQuery = `select * from logs where name_room = N'${nameRoom}'`
+            request.query(sqlQuery)
+                .then(result => {
+                    mssql.close()
+                    resolve(result.recordset)
+                })
+                .catch(error => {
+                    mssql.close()
+                    reject(error)
+                })
+             
+        })
+    })
+}
+
+
+
+
+function insertLog (username, nameRoom, activity,time,data) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const colums = '(username_member, name_room,activity,time,data)'
+            const sqlQuery = `INSERT INTO logs ${colums} VALUES (@Value1,@Value2,@Value3,@Value4,@Value5)`
+            request.input('Value1', mssql.NVarChar, username)
+            request.input('Value2', mssql.NVarChar, nameRoom)
+            request.input('Value3', mssql.VarChar, activity)
+            request.input('Value4', mssql.NVarChar, time)
+            request.input('Value5', mssql.NVarChar, data)
             request.query(sqlQuery)
                 .then(result => {
                     resolve(result.recordset)
@@ -70,7 +112,6 @@ function getRoomWithName(nameRoom) {
                     mssql.close()
                     reject(error)
                 })
-                
         })
     })
 }
@@ -91,7 +132,6 @@ function sendListRoom(typeSend) {
             console.log(error.message)
         })
 }
-
 
 function insertMember(username) {
     return new Promise((resolve, reject) => {
@@ -186,13 +226,11 @@ io.on('connection', socket => {
     socket.on('sendUsername', data => {
         let { username } = data
         insertMember(username)
-            .catch(error => {
-                console.log(error.message)
-            })
+            .catch(error => {})
         sendListRoom(socket)
     })
 
-    socket.on('joinRoom', data => {
+    socket.on('joinChatRoom', data => {
         let { nameRoom, passwordRoom, username } = data
         getRoomWithName(nameRoom)
         .then(recordset => {
@@ -205,14 +243,20 @@ io.on('connection', socket => {
         .then(() =>  {
             return getMembersOfRoom(nameRoom)
         })
-        .then(recordset => {
-            console.log("username: " + username)
-            console.log(recordset)
-            let members =  recordset.map(member => member.username_member)
-            socket.join(nameRoom)
-            socket.emit('joinedChatRoom', { nameRoom, password: passwordRoom, members})
-            socket.to(nameRoom).emit("newMemberJoined", { members, sizeMembers: recordset.length})
-            
+        .then(recordsetGetMemberOfRoom => {
+            getLogOfRoom(nameRoom)
+            .then(recordsetGetLogOfRoom => {
+                let members =  recordsetGetMemberOfRoom.map(member => member.username_member)
+                socket.join(nameRoom)
+                let logs = recordsetGetLogOfRoom.map(log => {
+                    return { 
+                        usernameSend: log.username_member, 
+                        activity:log.activity, time:log.time, message:log.data
+                    }
+                })
+                socket.emit('joinedChatRoom', { nameRoom, password: passwordRoom, members, logs})
+                socket.to(nameRoom).emit("newMemberJoined", { members, sizeMembers: recordsetGetMemberOfRoom.length})
+            }) 
         })
         .catch(error => {
             socket.emit('notify', error.message)
@@ -223,12 +267,17 @@ io.on('connection', socket => {
 
     socket.on('sendMessage', data => {
         let { nameRoom, username, message } = data
-        let time = formaTime(new Date());
-        io.to(nameRoom).emit('receiveMessage', { username, message, time })
+        let time = formaTime(new Date()) 
+        insertLog(username, nameRoom, "SEND_MESSAGE",time,message)
+        .then(() => {
+            io.to(nameRoom).emit('receiveMessage', { usernameSend: username, message, time }) 
+        })
+        .catch(error=>{
+            console.log(error.message)
+        })
     })
 
     socket.on('newChatRoom', data => {
-        // ! Check xem room này đã tồn tại chưa.
         let { nameRoom, passwordRoom, username } = data
         let isPassword = !passwordRoom ? false : true
         let password = isPassword ? passwordRoom : null

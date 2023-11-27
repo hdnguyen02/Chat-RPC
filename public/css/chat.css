@@ -99,7 +99,8 @@ body{
 
 .chat .chat-history ul li {
     list-style: none;
-    margin-bottom: 30px
+    margin-bottom: 30px; 
+    margin-right: 10px;
 }
 
 .chat .chat-history ul li:last-child {
