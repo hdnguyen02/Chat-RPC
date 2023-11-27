@@ -1,5 +1,3 @@
-
-
 const socket = io("http://localhost:3000")
 let isLogin = true
 let username 
@@ -25,7 +23,6 @@ changeScreen();
 // * EVENT
 formlogin.addEventListener("submit", function (event) {
   event.preventDefault();
-  // ! chưa check
   username = inputUsername.value.trim()
   if(username == '') { 
     alert("Không để trống username!")
@@ -107,69 +104,26 @@ socket.on('notify', data => {
 socket.on('receiveMessage', data => { 
     let {usernameSend, message, time} = data
     if (username == usernameSend) {  
-      $("#container-chat-history").innerHTML += `
-        <li class="clearfix">
-          <div class="message-data text-right">
-              <small class="message-data-time">${username} (${time})</small>
-             
-          </div>
-          <div class="message other-message float-right">
-            ${message}
-          </div>
-        </li>`
+      $("#container-chat-history").innerHTML += messageSenderTemplate(username, time, message)
+      return 
     }
-    else { 
-      $("#container-chat-history").innerHTML += `
-        <li class="clearfix">
-            <div class="message-data">
-              <div><smail style="font-size: 14px"></smail></div>
-              <small class="message-data-time">${usernameSend} (${time})</small>
-            </div>
-            <div class="message my-message">${message}</div>
-        </li>`
-    }
-    // kiểm tra xem người gửi có phải là mình nếu là mình thì render bên tay phải 
-
-    
-    
-
+    $("#container-chat-history").innerHTML += messageReceiverTemplate(usernameSend,time,message)
+ 
 })
-// nhận lại sự kiện đã join
-socket.on("joinedChatRoom", (data) => {
-  let {nameRoom, password, members, logs} = data
+
+socket.on("joinedChatRoom", data => {
+    let {nameRoom, password, members, logs} = data
+    sessionStorage.setItem(nameRoom,password)
+    curentChatRoom = nameRoom
+
+    let htmlMessages = logs.map(log => {
+      if (username == log.usernameSend) {  
+        return messageSenderTemplate(username, log.time, log.message)
+      }
+      return messageReceiverTemplate(log.usernameSend, log.time, log.message)
+    })
 
   
-
-  let htmlLogs = logs.map(log => {
-    if (username == log.usernameSend) {  
-      return  `
-        <li class="clearfix">
-          <div class="message-data text-right">
-              <small class="message-data-time">${username} (${log.time})</small>
-             
-          </div>
-          <div class="message other-message float-right">
-            ${log.message}
-          </div>
-        </li>`
-    }
-    else { 
-      return `
-        <li class="clearfix">
-            <div class="message-data">
-              <div><smail style="font-size: 14px"></smail></div>
-              <small class="message-data-time">${log.usernameSend} (${log.time})</small>
-            </div>
-            <div class="message my-message">${log.message}</div>
-        </li>`
-    }
-  })
-
-  
-
-  
-  sessionStorage.setItem(nameRoom,password)
-  curentChatRoom = nameRoom
     let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
     let html = `
     <div class="d-flex justify-content-between">
@@ -213,13 +167,10 @@ socket.on("joinedChatRoom", (data) => {
     </div>
     `
     containerRoomChat.innerHTML = html
-
-    $("#container-chat-history").innerHTML = htmlLogs.join('')
+    $("#container-chat-history").innerHTML = htmlMessages.join('')
 });
 
 
-
-// * ON
 socket.on("sendListRoom", (roomsDto) => {
   const ulRooms = $("#ul-rooms");
   rooms = roomsDto;
@@ -251,7 +202,7 @@ socket.on('newMemberJoined', data => {
   $("#size-members-2").innerText = `Thành viên (${sizeMembers})`
 })
 
-// * FUNC
+
 function changeScreen() {
   if (isLogin) {
     containerChat.style.display = "none"
@@ -261,4 +212,25 @@ function changeScreen() {
     containerLogin.style.display = "none"
   }
 }
+
+
+function messageReceiverTemplate(usernameSender, time, message) { 
+  return `<li class="clearfix">
+            <div class="message-data">
+              <div><smail style="font-size: 14px"></smail></div>
+              <small class="message-data-time">${usernameSender} (${time})</small>
+            </div>
+            <div class="message my-message">${message}</div>
+          </li>`
+}
+
+function messageSenderTemplate(username, time, message) {
+  return `<li class="clearfix">
+            <div class="message-data text-right">
+                <small class="message-data-time">${username} (${time})</small>
+            </div>
+            <div class="message other-message float-right">${message}</div>
+          </li>`
+}
+
 
