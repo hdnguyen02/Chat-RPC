@@ -49,7 +49,7 @@ btnNewChatRoom.addEventListener("click", function () {
     return
   }
   let passwordRoom = $("input[name='password-chat-room']").value;
-  socket.emit("newChatRoom", nameRoom, passwordRoom, inputUsername.value)
+  socket.emit("newChatRoom", {nameRoom, passwordRoom, username: inputUsername.value})
 });
 
 btnCloseModelEpcr.addEventListener("click", function(){ 
@@ -62,26 +62,27 @@ btnJoinChatRoom.addEventListener('click', function(){
   // sau khi nó nhấp vào tiến hành reset value
   $("#modelEnterPassWordChatRoom").style.display = "none"
   $("input[name='enter-password']").value = ''
-  socket.emit("joinRoom", curentJoinChatRoom, textEnterPassword, username)
+  socket.emit("joinRoom", {nameRoom:curentJoinChatRoom, passwordRoom:textEnterPassword, username})
 })
 
 
 function handerJoinChat(event) {
   const curentTarget = event.currentTarget;
   const nameRoom = curentTarget.dataset.chatRoom
+  console.log(nameRoom)
 
   if (nameRoom in sessionStorage) { 
     let password = sessionStorage.getItem(nameRoom)
     if (password === 'null') {
       password = null
     }
-    socket.emit("joinRoom", nameRoom,password , username) 
+    socket.emit("joinRoom", {nameRoom,passwordRoom:password , username}) 
   }
   else if (rooms[nameRoom].isPassword) {
     $("#modelEnterPassWordChatRoom").style.display = "block" 
     curentJoinChatRoom = nameRoom
   } else {
-    socket.emit("joinRoom", nameRoom, null, username) 
+    socket.emit("joinRoom", {nameRoom,passwordRoom:null , username}) 
   }
 }
 
@@ -135,6 +136,7 @@ socket.on('receiveMessage', data => {
 })
 // nhận lại sự kiện đã join
 socket.on("joinedChatRoom", (data) => {
+
 
   let {nameRoom, password, members} = data
   console.log(data)
@@ -211,9 +213,10 @@ socket.on("sendListRoom", (roomsDto) => {
   ulRooms.innerHTML = listRoomHtml
 });
 
-socket.on('newMember', data => {
-  let {member, sizeMembers} = data
-  $("#ul-members").innerHTML += `<li>${member}</li>`
+socket.on('newMemberJoined', data => {
+  let {members, sizeMembers} = data
+  let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
+  $("#ul-members").innerHTML = htmlTagLiMember.join('')
   $("#size-members-1").innerText = `${sizeMembers} thành viên`
   $("#size-members-2").innerText = `Thành viên (${sizeMembers})`
 })

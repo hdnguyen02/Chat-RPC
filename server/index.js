@@ -2,7 +2,8 @@ const express = require('express')
 const http = require('http')
 const socketIO = require('socket.io')
 const hbs = require('hbs')
-const mssql = require('mssql')  
+const mssql = require('mssql')
+
 
 
 
@@ -18,96 +19,231 @@ const config = {
 };
 
 
-// TEST kết nối cơ sở dữ liệu
-// mssql.connect(config, err => {
-//     if (err) { 
-//         console.log(err)
-//     }
-//     let request = new mssql.Request() 
-//     request.query('select * from activitys', function (err, wrapper) {
-            
-//         if (err) console.log(err)
-//         console.log(wrapper.recordset)
-//     });
-// })
 
 
 
-const app = express()  
+const app = express()
 const server = http.createServer(app)
 const io = socketIO(server)
 hbs.registerPartials('D:/Chat RPC/views/partials')
 app.set('view engine', 'hbs')
-app.use(express.static( 'public'))
+app.use(express.static('public'))
 
 
-// nên lưu trữ thành object thay vì thành data 
 
 
-const rooms = {} // Lưu trữ room trên hệ thống. 
-const roomsDto = {} // không chứa passWord trong hệ thống. 
-const users = []
+function getRooms() {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const sqlQuery = 'select * from rooms'
+            request.query(sqlQuery)
+                .then(result => {
+                    resolve(result.recordset)
+                })
+                .catch(error => {
+                    reject(error)
+                })
+                .finally(() => {
+                    mssql.close()
+                })
+        })
+    })
+}
 
 
-// on lắng nghe cái gì đó  
-io.on('connection', socket => { // sự kiến có người dùng kết nối
-    console.log(`Người dùng đã join ${socket.id}`)
-    socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+
+
+function getRoomWithName(nameRoom) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const sqlQuery = `select * from rooms where name = N'${nameRoom}'`
+            request.query(sqlQuery)
+                .then(result => {
+                    mssql.close()
+                    resolve(result.recordset)
+                })
+                .catch(error => {
+                    mssql.close()
+                    reject(error)
+                })
+                
+        })
+    })
+}
+
+function sendListRoom(typeSend) {
+    getRooms()
+        .then(rooms => {
+            let roomsDto = {}
+            rooms.forEach(room => {
+                let isPassword = !room.password ? false : true
+                roomsDto[room.name] = {
+                    isPassword
+                }
+            })
+            typeSend.emit('sendListRoom', roomsDto)
+        })
+        .catch(error => {
+            console.log(error.message)
+        })
+}
+
+
+function insertMember(username) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const sqlQuery = "INSERT INTO members (username) VALUES (@Value1)"
+            request.input('Value1', mssql.NVarChar, username)
+            request.query(sqlQuery)
+                .then(() => {
+                    resolve()
+                })
+                .catch(error => {
+                    reject(error)
+                })
+                .finally(() => {
+                    mssql.close()
+                })
+        })
+    })
+}
+
+
+
+function insertRoom(nameRoom, password, username) {
+    return new Promise(async (resolve, reject) => {
+        let pool;
+        try {
+            pool = await mssql.connect(config);
+            const request = pool.request();
+            request.input('nameRoom', mssql.NVarChar, nameRoom);
+            request.input('password', mssql.NVarChar, password);
+            request.input('username', mssql.NVarChar, username);
+            const result = await request.execute('spNewChatRoom');
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        } finally {
+            if (pool) {
+                pool.close();
+            }
+        }
     });
-    
-    socket.on('sendUsername', data => { 
-        let user = {idSocket: socket.id, username: data.username}
-        console.log("có vào đây")
-        users.push(user)    
-        socket.emit('sendListRoom',roomsDto)
-    }) 
+}
 
-    socket.on('joinRoom', (nameRoom, passwordRoom, username) => { 
-        let room = rooms[nameRoom]
-        if (room.password != passwordRoom) { 
-            socket.emit('notify', 'Sai mật khẩu chat room')
-            return
-        }
-        if (!room.usernames.includes(username)) {
-            room.usernames.push(username) 
-            socket.to(nameRoom).emit("newMember", {member: username, sizeMembers: room.usernames.length})
-        }
-        
-        socket.join(nameRoom)
-        socket.emit('joinedChatRoom', {nameRoom, password:passwordRoom, members: room.usernames})
-        
+
+function insertMemberToRoom(username, nameRoom) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            request.input('nameRoom', mssql.NVarChar, nameRoom)
+            request.input('username', mssql.NVarChar, username)
+            request.execute('spInsertMemberToRoom')
+                .then((result) => {
+                    mssql.close()
+                    resolve(result)
+                })
+                .catch(error => {
+                    mssql.close()
+                    reject(error)
+                })
+        })
+    })
+   
+  }
+  
+  
+  
+
+function getMembersOfRoom(nameRoom) {
+    return new Promise((resolve, reject) => {
+        mssql.connect(config, error => {
+            if (error) reject(error)
+            let request = new mssql.Request()
+            const sqlQuery = `SELECT username_member FROM room_member WHERE name_room = N'${nameRoom}'`;
+            request.query(sqlQuery)
+                .then(result => {
+                    mssql.close()
+                    resolve(result.recordset)
+                })
+                .catch(error => {
+                    mssql.close()
+                    reject(error)
+                })
+        })
+    })
+}
+
+
+io.on('connection', socket => {
+    socket.on('sendUsername', data => {
+        let { username } = data
+        insertMember(username)
+            .catch(error => {
+                console.log(error.message)
+            })
+        sendListRoom(socket)
     })
 
-    socket.on('sendMessage', data => { 
-        let { nameRoom, username, message } =data  
-        let time = formaTime(new Date()); 
-        io.to(nameRoom).emit('receiveMessage', {username, message, time})
-    }) 
+    socket.on('joinRoom', data => {
+        let { nameRoom, passwordRoom, username } = data
+        getRoomWithName(nameRoom)
+        .then(recordset => {
+            let room = recordset[0]
+            if (room.password != passwordRoom){   
+                throw new Error("Sai mật khẩu chat room!")
+            }
+            return insertMemberToRoom(username, nameRoom)
+        })
+        .then(() =>  {
+            return getMembersOfRoom(nameRoom)
+        })
+        .then(recordset => {
+            console.log("username: " + username)
+            console.log(recordset)
+            let members =  recordset.map(member => member.username_member)
+            socket.join(nameRoom)
+            socket.emit('joinedChatRoom', { nameRoom, password: passwordRoom, members})
+            socket.to(nameRoom).emit("newMemberJoined", { members, sizeMembers: recordset.length})
+            
+        })
+        .catch(error => {
+            socket.emit('notify', error.message)
+        })
 
 
+    })
 
-    socket.on('newChatRoom',(nameRoom, passwordRoom, username) => { // data: name: password
+    socket.on('sendMessage', data => {
+        let { nameRoom, username, message } = data
+        let time = formaTime(new Date());
+        io.to(nameRoom).emit('receiveMessage', { username, message, time })
+    })
+
+    socket.on('newChatRoom', data => {
+        // ! Check xem room này đã tồn tại chưa.
+        let { nameRoom, passwordRoom, username } = data
         let isPassword = !passwordRoom ? false : true
-        let password = isPassword ? passwordRoom : null 
+        let password = isPassword ? passwordRoom : null
 
-        let usernames = []
-        usernames.push(username)
-        rooms[nameRoom] = { 
-            password,
-            usernames
-        }
-
-        roomsDto[nameRoom] = { 
-            isPassword, 
-            usernames
-        } 
-        socket.join(nameRoom)
-        socket.emit('joinedChatRoom',  {nameRoom, password: password, members: usernames}) 
-        io.emit('sendListRoom',roomsDto) 
+        insertRoom(nameRoom, password,username)
+            .then(() => {
+                socket.join(nameRoom)
+                socket.emit('joinedChatRoom', { nameRoom, password: password, members: [username] })
+                sendListRoom(io)
+            })
+            .catch(error => {
+                console.log(error.message)
+            })
     })
 })
-
 
 function formaTime(time) {
     var day = time.getDate().toString().padStart(2, '0');
@@ -115,18 +251,13 @@ function formaTime(time) {
     var year = time.getFullYear();
     var hours = time.getHours().toString().padStart(2, '0');
     var minutes = time.getMinutes().toString().padStart(2, '0');
-  
     return `${day}-${month}-${year}, ${hours}:${minutes}`;
-  }
-
+}
 
 
 app.get('/', (req, res) => {
-    res.render('client') 
-}) 
-
-
-
+    res.render('client')
+})
 
 
 const PORT = 3000
