@@ -1,7 +1,4 @@
 <link rel="stylesheet" href="css/chat.css" />
-{{!--
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" /> --}}
-
 <div class="vw-100 vh-100">
     <div class="row clearfix">
         <div class="col-lg-12">
@@ -13,104 +10,93 @@
                         </div>
                         <input type="text" class="form-control" placeholder="Search..." />
                     </div>
-                    {{! * group btn }}
                     <div class="mt-3">
-                        <button type="button" class="btn btn-outline-success w-100" data-toggle="modal"
-                            data-target="#modelNewChatRoom">new chat room</button>
+                        <button type="button" class="btn btn-outline-success w-100" data-toggle="modal" data-target="#modelNewChatRoom">new chat room</button>
                     </div>
                     <ul id="ul-rooms" style="height: 70%; overflow-y: auto" class="list-unstyled chat-list mt-2 mb-0">
-
+                        {{!-- * RENDER ROOMS --}}
                     </ul>
                 </div>
                 <div id="container-room-chat" class="chat vh-100">
-                  <div class="vh-100 d-flex justify-content-center align-items-center">
+                    <div class="vh-100 d-flex justify-content-center align-items-center">
                         <p style="font-size: 18px">Chưa chọn đoạn chat nào</p>
                     </div>
+                    {{!-- * RENDER CHAT ROOM --}}
 
-
-                    {{!-- ! GIA SU --}} 
-                   
-
-                </di>
-
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="modelNewChatRoom" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">New chat room</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="name-chat-room">Name<span style="color: red">*</span></label>
-                    <input name="name-chat-room" type="text" class="form-control" placeholder="Enter name">
                 </div>
-                <div class="form-group">
-                    <label for="password-chat-room">password</label>
-                    <input name="password-chat-room" type="password" class="form-control" placeholder="Enter password">
-                </div>
-                <div class="form-group">
-                    <label for="confirm-password-chat-room">confirm password</label>
-                    <input name="confirm-password-chat-room" type="password" class="form-control"
-                        placeholder="Enter confirm password">
-                </div>
-            </div>
-            <div class="modal-footer">
 
-                <button id="btn-new-chat-room" data-dismiss="modal" type="button"
-                    class="btn btn-success w-100">Submit</button>
             </div>
         </div>
     </div>
-</div>
 
+    {{!-- * MODEL --}}
 
-<div class="modal" id="modelEnterPassWordChatRoom" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">Please enter a password</h5>
-                <button id="btn-close-model-epcr" type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="enter-password">Password<span style="color: red">*</span></label>
-                    <input name="enter-password" type="text" class="form-control" id="name-chat-room"
-                        placeholder="Enter password">
+    <div class="modal" id="modelNewChatRoom" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header">
+                    <h5 class="modal-title">New chat room</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer">
-
-                <button id="btn-join-chat-room" data-dismiss="modal" type="button"
-                    class="btn btn-success w-100">Join</button>
+                <form class="modal-body">
+                    <div class="form-group">
+                        <label for="name-chat-room">Name<span style="color: red">*</span></label>
+                        <input required name="name-chat-room" type="text" class="form-control" placeholder="Enter name">
+                    </div>
+                    <div class="form-group">
+                        <label for="password-chat-room">password</label>
+                        <input name="password-chat-room" type="password" class="form-control" placeholder="Enter password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password-chat-room">confirm password</label>
+                        <input name="confirm-password-chat-room" type="password" class="form-control" placeholder="Enter confirm password">
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button id="btn-new-chat-room" data-dismiss="modal" type="button" class="btn btn-success w-100">Submit</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="modal" id="modelEnterPassWordChatRoom" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header">
+                    <h5 class="modal-title">Please enter a password</h5>
+                    <button id="btn-close-model-epcr" type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="enter-password">Password<span style="color: red">*</span></label>
+                        <input name="enter-password" type="password" class="form-control" id="enter-password"
+                            placeholder="Enter password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-join-chat-room" data-dismiss="modal" type="button" class="btn btn-success w-100">Join</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
-<style>
-    .modal-backdrop.show {
-        display: none !important;
-    }
+    <style>
+        .modal-backdrop.show {
+            display: none !important;
+        }
 
-    p {
-        margin: 0;
-    }
-    li {
-        list-style: none; 
-    }
-</style>
+        p {
+            margin: 0;
+        }
+
+        li {
+            list-style: none;
+        }
+    </style>

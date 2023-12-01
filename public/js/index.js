@@ -34,29 +34,34 @@ formlogin.addEventListener("submit", function (event) {
 });
 btnNewChatRoom.addEventListener("click", function () {
   let nameRoom = $("input[name='name-chat-room']").value.trim()
-  // Kiểm tra xem room này đã tồn tại chưa. 
+  let passwordRoomConfirm =$("input[name='confirm-password-chat-room']").value
+  let passwordRoom = $("input[name='password-chat-room']").value
+
+  $("input[name='confirm-password-chat-room']").value = ''
+  $("input[name='password-chat-room']").value = ''
+  $("input[name='name-chat-room']").value = ''
+
   if (nameRoom == '') {
     alert('Không để trống name room chat!')
     return
   }
-  // ! Chưa kiểm tra password 
-
+  if (passwordRoom != passwordRoomConfirm) {
+    alert('Password và password confirm không chính xác!')
+    return 
+  }
   if (rooms[nameRoom]) { 
     alert("Đã tồn tại chat room này!")
     return
   }
-  let passwordRoom = $("input[name='password-chat-room']").value;
   socket.emit("newChatRoom", {nameRoom, passwordRoom, username: inputUsername.value})
 });
 
 btnCloseModelEpcr.addEventListener("click", function(){ 
-  $("#modelEnterPassWordChatRoom").style.display = "none  "
+  $("#modelEnterPassWordChatRoom").style.display = "none"
 })
 
-btnJoinChatRoom.addEventListener('click', function(){
-  // lấy ra giá trị chat room.  
+btnJoinChatRoom.addEventListener('click', function(){ 
   let textEnterPassword = $("input[name='enter-password']").value
-  // sau khi nó nhấp vào tiến hành reset value
   $("#modelEnterPassWordChatRoom").style.display = "none"
   $("input[name='enter-password']").value = ''
   socket.emit("joinChatRoom", {nameRoom:curentJoinChatRoom, passwordRoom:textEnterPassword, username})
