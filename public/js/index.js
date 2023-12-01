@@ -1,131 +1,142 @@
-const socket = io("http://localhost:3000")
-let isLogin = true
-let username 
-let rooms = {}
-let curentChatRoom 
-let curentJoinChatRoom 
-
+const socket = io("http://localhost:3000");
+let isLogin = true;
+let username;
+let rooms = {};
+let curentChatRoom;
+let curentJoinChatRoom;
 
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 const containerLogin = $("#container-login");
-const containerChat = $("#container-chat")
+const containerChat = $("#container-chat");
 const formlogin = $("#form-login");
 const inputUsername = $("input[name='username']");
 const btnNewChatRoom = $("#btn-new-chat-room");
 const inputEnterPassword = $("input[name='enter-password']");
-const containerRoomChat = $("#container-room-chat") 
-const btnCloseModelEpcr =$("#btn-close-model-epcr")
-const btnJoinChatRoom = $("#btn-join-chat-room")
+const containerRoomChat = $("#container-room-chat");
+const btnCloseModelEpcr = $("#btn-close-model-epcr");
+const btnJoinChatRoom = $("#btn-join-chat-room");
 
 changeScreen();
 
 // * EVENT
 formlogin.addEventListener("submit", function (event) {
   event.preventDefault();
-  username = inputUsername.value.trim()
-  if(username == '') { 
-    alert("Không để trống username!")
-    return
+  username = inputUsername.value.trim();
+  if (username == "") {
+    alert("Không để trống username!");
+    return;
   }
-  socket.emit('sendUsername', {username})
+  socket.emit("sendUsername", { username });
   isLogin = false;
   changeScreen();
 });
 btnNewChatRoom.addEventListener("click", function () {
-  let nameRoom = $("input[name='name-chat-room']").value.trim()
-  // Kiểm tra xem room này đã tồn tại chưa. 
-  if (nameRoom == '') {
-    alert('Không để trống name room chat!')
-    return
+  let nameRoom = $("input[name='name-chat-room']").value.trim();
+  // Kiểm tra xem room này đã tồn tại chưa.
+  if (nameRoom == "") {
+    alert("Không để trống name room chat!");
+    return;
   }
-  // ! Chưa kiểm tra password 
+  // ! Chưa kiểm tra password
 
-  if (rooms[nameRoom]) { 
-    alert("Đã tồn tại chat room này!")
-    return
+  if (rooms[nameRoom]) {
+    alert("Đã tồn tại chat room này!");
+    return;
   }
   let passwordRoom = $("input[name='password-chat-room']").value;
-  socket.emit("newChatRoom", {nameRoom, passwordRoom, username: inputUsername.value})
+  socket.emit("newChatRoom", {
+    nameRoom,
+    passwordRoom,
+    username: inputUsername.value,
+  });
 });
 
-btnCloseModelEpcr.addEventListener("click", function(){ 
-  $("#modelEnterPassWordChatRoom").style.display = "none  "
-})
+btnCloseModelEpcr.addEventListener("click", function () {
+  $("#modelEnterPassWordChatRoom").style.display = "none  ";
+});
 
-btnJoinChatRoom.addEventListener('click', function(){
-  // lấy ra giá trị chat room.  
-  let textEnterPassword = $("input[name='enter-password']").value
+btnJoinChatRoom.addEventListener("click", function () {
+  // lấy ra giá trị chat room.
+  let textEnterPassword = $("input[name='enter-password']").value;
   // sau khi nó nhấp vào tiến hành reset value
-  $("#modelEnterPassWordChatRoom").style.display = "none"
-  $("input[name='enter-password']").value = ''
-  socket.emit("joinChatRoom", {nameRoom:curentJoinChatRoom, passwordRoom:textEnterPassword, username})
-})
-
+  $("#modelEnterPassWordChatRoom").style.display = "none";
+  $("input[name='enter-password']").value = "";
+  socket.emit("joinChatRoom", {
+    nameRoom: curentJoinChatRoom,
+    passwordRoom: textEnterPassword,
+    username,
+  });
+});
 
 function handerJoinChat(event) {
   const curentTarget = event.currentTarget;
-  const nameRoom = curentTarget.dataset.chatRoom
-  console.log(nameRoom)
+  const nameRoom = curentTarget.dataset.chatRoom;
+  console.log(nameRoom);
 
-  if (nameRoom in sessionStorage) { 
-    let password = sessionStorage.getItem(nameRoom)
-    if (password === 'null') {
-      password = null
+  if (nameRoom in sessionStorage) {
+    let password = sessionStorage.getItem(nameRoom);
+    if (password === "null") {
+      password = null;
     }
-    socket.emit("joinChatRoom", {nameRoom,passwordRoom:password , username}) 
-  }
-  else if (rooms[nameRoom].isPassword) {
-    $("#modelEnterPassWordChatRoom").style.display = "block" 
-    curentJoinChatRoom = nameRoom
+    socket.emit("joinChatRoom", { nameRoom, passwordRoom: password, username });
+  } else if (rooms[nameRoom].isPassword) {
+    $("#modelEnterPassWordChatRoom").style.display = "block";
+    curentJoinChatRoom = nameRoom;
   } else {
-    socket.emit("joinChatRoom", {nameRoom,passwordRoom:null , username}) 
+    socket.emit("joinChatRoom", { nameRoom, passwordRoom: null, username });
   }
 }
 
-function onSendMessage(event) { 
-    if (event.key === 'Enter') {
-        let message =  event.target.value
-        if (message == '') return
-        event.target.value = ''
-        socket.emit("sendMessage", {username, message, nameRoom: curentChatRoom})
-    }
+function onSendMessage(event) {
+  if (event.key === "Enter") {
+    let message = event.target.value;
+    if (message == "") return;
+    event.target.value = "";
+    socket.emit("sendMessage", { username, message, nameRoom: curentChatRoom });
+  }
 }
 
 // * EMIT
-function emitSendUserName (data) {
+function emitSendUserName(data) {
   socket.emit("sendUsername", data);
-}  
+}
 
-socket.on('notify', data => { 
-  alert(data)
-})
+socket.on("notify", (data) => {
+  alert(data);
+});
 
-socket.on('receiveMessage', data => { 
-    let {usernameSend, message, time} = data
-    if (username == usernameSend) {  
-      $("#container-chat-history").innerHTML += messageSenderTemplate(username, time, message)
-      return 
+socket.on("receiveMessage", (data) => {
+  let { usernameSend, message, time } = data;
+  if (username == usernameSend) {
+    $("#container-chat-history").innerHTML += messageSenderTemplate(
+      username,
+      time,
+      message
+    );
+    return;
+  }
+  $("#container-chat-history").innerHTML += messageReceiverTemplate(
+    usernameSend,
+    time,
+    message
+  );
+});
+
+socket.on("joinedChatRoom", (data) => {
+  let { nameRoom, password, members, logs } = data;
+  sessionStorage.setItem(nameRoom, password);
+  curentChatRoom = nameRoom;
+
+  let htmlMessages = logs.map((log) => {
+    if (username == log.usernameSend) {
+      return messageSenderTemplate(username, log.time, log.message);
     }
-    $("#container-chat-history").innerHTML += messageReceiverTemplate(usernameSend,time,message)
- 
-})
+    return messageReceiverTemplate(log.usernameSend, log.time, log.message);
+  });
 
-socket.on("joinedChatRoom", data => {
-    let {nameRoom, password, members, logs} = data
-    sessionStorage.setItem(nameRoom,password)
-    curentChatRoom = nameRoom
-
-    let htmlMessages = logs.map(log => {
-      if (username == log.usernameSend) {  
-        return messageSenderTemplate(username, log.time, log.message)
-      }
-      return messageReceiverTemplate(log.usernameSend, log.time, log.message)
-    })
-
-  
-    let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
-    let html = `
+  let htmlTagLiMember = members.map((member) => `<li>${member}</li>`);
+  let html = `
     <div class="d-flex justify-content-between">
     <div class="vh-100 w-100">
     <div class="chat-header clearfix">
@@ -136,7 +147,9 @@ socket.on("joinedChatRoom", data => {
                 </a>
                 <div class="chat-about">
                     <h6 class="mb-0">${curentChatRoom}</h6>
-                    <small id="size-members-1">${members.length} thành viên</small>
+                    <small id="size-members-1">${
+                      members.length
+                    } thành viên</small>
                 </div>
             </div>
             <div class="col-lg-6 hidden-sm text-right">
@@ -161,15 +174,18 @@ socket.on("joinedChatRoom", data => {
     </div>
     </div>
     <div class="vh-100" style="width: 280px; border-left: 2px solid #f4f7f6;">
-        <div id="size-members-2" class="d-flex justify-content-center align-items-center" style="height: 10vh;font-weight: 500; ;border-bottom: 2px solid #f4f7f6;" >Thành viên (${members.length})</div>
-        <div> <ul id="ul-members" style="overflow-y: auto; height: 90vh;">${htmlTagLiMember.join('')}</ul> </div>
+        <div id="size-members-2" class="d-flex justify-content-center align-items-center" style="height: 10vh;font-weight: 500; ;border-bottom: 2px solid #f4f7f6;" >Thành viên (${
+          members.length
+        })</div>
+        <div> <ul id="ul-members" style="overflow-y: auto; height: 90vh;">${htmlTagLiMember.join(
+          ""
+        )}</ul> </div>
     </div>
     </div>
-    `
-    containerRoomChat.innerHTML = html
-    $("#container-chat-history").innerHTML = htmlMessages.join('')
+    `;
+  containerRoomChat.innerHTML = html;
+  $("#container-chat-history").innerHTML = htmlMessages.join("");
 });
-
 
 socket.on("sendListRoom", (roomsDto) => {
   const ulRooms = $("#ul-rooms");
@@ -189,39 +205,42 @@ socket.on("sendListRoom", (roomsDto) => {
                     <p class="name">${nameRoom}</p>
                     <div class="status">${iconScope}</div>
                 </div>
-           </li>`
+           </li>`;
   }
-  ulRooms.innerHTML = listRoomHtml
+  ulRooms.innerHTML = listRoomHtml;
 });
 
-socket.on('newMemberJoined', data => {
-  let {members, sizeMembers} = data
-  let htmlTagLiMember = members.map(member => `<li>${member}</li>`)
-  $("#ul-members").innerHTML = htmlTagLiMember.join('')
-  $("#size-members-1").innerText = `${sizeMembers} thành viên`
-  $("#size-members-2").innerText = `Thành viên (${sizeMembers})`
-})
+socket.on("newMemberJoined", (data) => {
+  let { members, sizeMembers } = data;
+  let htmlTagLiMember = members.map((member) => `<li>${member}</li>`);
+  $("#ul-members").innerHTML = htmlTagLiMember.join("");
+  $("#size-members-1").innerText = `${sizeMembers} thành viên`;
+  $("#size-members-2").innerText = `Thành viên (${sizeMembers})`;
+});
 
+socket.on("disconnect", function () {
+  isLogin = true;
+  changeScreen();
+});
 
 function changeScreen() {
   if (isLogin) {
-    containerChat.style.display = "none"
-    containerLogin.style.display = "block"
+    containerChat.style.display = "none";
+    containerLogin.style.display = "block";
   } else {
-    containerChat.style.display = "block"
-    containerLogin.style.display = "none"
+    containerChat.style.display = "block";
+    containerLogin.style.display = "none";
   }
 }
 
-
-function messageReceiverTemplate(usernameSender, time, message) { 
+function messageReceiverTemplate(usernameSender, time, message) {
   return `<li class="clearfix">
             <div class="message-data">
               <div><smail style="font-size: 14px"></smail></div>
               <small class="message-data-time">${usernameSender} (${time})</small>
             </div>
             <div class="message my-message">${message}</div>
-          </li>`
+          </li>`;
 }
 
 function messageSenderTemplate(username, time, message) {
@@ -230,7 +249,5 @@ function messageSenderTemplate(username, time, message) {
                 <small class="message-data-time">${username} (${time})</small>
             </div>
             <div class="message other-message float-right">${message}</div>
-          </li>`
+          </li>`;
 }
-
-

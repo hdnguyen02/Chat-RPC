@@ -1,0 +1,245 @@
+.radius-1 {
+    border-radius: 5px;
+}
+
+.radius-2 {
+    border-radius: 15px;
+}
+
+.radius-full {
+    border-radius: 100%;
+}
+
+.table .td-row-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+}
+
+.custom-table {
+    height: 25rem;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.custom-table-hover tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+}
+
+.custom-table-hover tr:hover td:last-child button {
+    background-color: white;
+}
+
+.custom-table::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-table::-webkit-scrollbar-track {
+    background-color: white;
+}
+
+.custom-table::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #eee;
+}
+
+.user-avatar {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 100%;
+    border: none;
+}
+
+.notify-container {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    padding: 20px 20px 0 0;
+    z-index: 1000;
+}
+
+.notify-container .item {
+    width: 300px;
+    background-color: white;
+    padding: 20px;
+    padding-left: 0;
+    color: black;
+    font-weight: 600;
+    border-radius: 5px;
+    animation: show 1.5s ease, hide 1.5s forwards 3.5s;
+    position: relative;
+}
+
+@keyframes show {
+    0% {
+        transform: translateX(150%);
+    }
+
+    50% {
+        transform: translateX(-10px);
+    }
+
+    80% {
+        transform: translateX(20px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes hide {
+    0% {
+        transform: translateX(0);
+    }
+
+    30% {
+        transform: translateX(-20px);
+    }
+
+    100% {
+        transform: translateX(150%);
+    }
+
+}
+
+.notify-container .item::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 5px;
+    animation: timing 2s forwards 1.5s;
+}
+
+.notify-container .item.login::after {
+    background-color: #1cc88a;
+}
+
+.notify-container .item.infor::after {
+    background-color: #4e73df;
+}
+
+.notify-container .item.error::after {
+    background-color: #e74a3b;
+}
+
+.notify-container .item.success::after {
+    background-color: #20E3B2;
+}
+
+@keyframes timing {
+    0% {
+        width: 100%;
+    }
+
+    100% {
+        width: 0;
+    }
+
+    ;
+}
+
+/* .notify-container .item.out{
+    animation: hide 1.5s forwards ;
+} */
+
+
+
+.notify-container .item i {
+    color: white;
+    transform: translateX(-34px);
+}
+
+.notify-container .item.login {
+    border-left: 50px #1cc88a solid;
+}
+
+.notify-container .item.infor {
+    border-left: 50px #4e73df solid;
+}
+
+.notify-container .item.fail {
+    border-left: 50px #e74a3b solid;
+}
+
+.notify-container .item.success {
+    border-left: 50px #20E3B2 solid;
+}
+
+.custom-divider {
+    height: 2px;
+    width: 100%;
+    background-color: #eee;
+    margin: 20px 0;
+}
+
+
+.drop-down {
+    position: relative;
+    display: inline-block;
+}
+
+.drop-down .drop-down-btn {
+    border: none;
+    outline: none;
+}
+
+.drop-down-list {
+    background-color: white;
+    -webkit-box-shadow: -2px 1px 18px -2px rgba(0, 0, 0, 0.56);
+    -moz-box-shadow: -2px 1px 18px -2px rgba(0, 0, 0, 0.56);
+    box-shadow: -2px 1px 18px -2px rgba(0, 0, 0, 0.56);
+    border-radius: 10px;
+    position: absolute;
+    transform: translateX(-73%);
+    margin-top: 15px;
+    z-index: 10000;
+}
+
+.drop-down-list .drop-down-item {
+    width: 150px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.drop-down-list .drop-down-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.drop-down-list .drop-down-item:first-child {
+    position: relative;
+}
+
+.drop-down-list .drop-down-item:first-child::before {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    right: 2%;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+    transform: translate(-50%, -100%);
+}
