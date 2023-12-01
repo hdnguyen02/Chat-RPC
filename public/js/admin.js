@@ -30,7 +30,6 @@ async function renderHomePage(data) {
   ]);
 
   // Add event
-  $("button.addRoom").addEventListener("click", showCreateRoomModal);
 }
 
 async function renderMemberCards(userArray) {
@@ -39,6 +38,15 @@ async function renderMemberCards(userArray) {
     renderSingleMemberCard(user.username, user.socketID ? "Online" : "Offline");
   });
   // Add event to user card
+  $$(".table-users tbody tr td:last-child .drop-down-btn").forEach(
+    (element) => {
+      element.addEventListener("click", (event) => {
+        element.parentElement
+          .querySelector(".drop-down-list")
+          .classList.toggle("d-none");
+      });
+    }
+  );
 }
 
 function renderSingleMemberCard(username, status) {
@@ -58,12 +66,28 @@ function renderSingleMemberCard(username, status) {
       </div>
   </td>
   <td>
-      <button class="btn-circle border-0">
+    <div class="drop-down position-relative">
+      <button class="btn-circle drop-down-btn">
           <i class="fa-solid fa-ellipsis"></i>
       </button>
+      <div class="drop-down-list d-none">
+          <div class="drop-down-item lock-member">Khóa tài khoản</div>
+      </div>
+    </div>
   </td>
 </tr>`;
   memberArea.insertAdjacentHTML("beforeend", template);
+  // Add event
+  memberArea
+    .querySelector("tr:last-child .drop-down-list .drop-down-item")
+    .addEventListener("click", function (event) {
+      if (event.target.classList.contains("lock-member")) {
+        alert("Lock member function");
+      } else {
+        alert("Nope");
+      }
+      event.target.parentElement.classList.add("d-none");
+    });
 }
 
 async function renderRoomCards(roomArray) {
@@ -90,12 +114,7 @@ function renderSingleRoomCard(name, ownerName, quantity) {
       <h10 class="text-dark font-weight-bold">${name}</h10>
       <h11 class="text-gray-500">${quantity} members</h11>
   </td>
-  <td class="td-row-center w-25">
-      <span class="${
-        ownerName == "Admin" ? "bg-warning" : "bg-success"
-      } p-2 text-white"
-          style="border-radius: 10px;">${ownerName}</span>
-  </td>
+  
   <td>
     <div class="drop-down position-relative">
       <button class="btn-circle drop-down-btn">
@@ -103,7 +122,7 @@ function renderSingleRoomCard(name, ownerName, quantity) {
       </button>
       <div class="drop-down-list d-none">
           <div class="drop-down-item send-notify">Gửi thông báo</div>
-          <div class="drop-down-item disband-group">Giải tán</div>
+          <div class="drop-down-item lock-group">Khóa phòng</div>
       </div>
     </div>
   </td>
@@ -115,7 +134,7 @@ function renderSingleRoomCard(name, ownerName, quantity) {
     .addEventListener("click", function (event) {
       if (event.target.classList.contains("send-notify")) {
         showSendNotifyModal();
-      } else if (event.target.classList.contains("disband-group")) {
+      } else if (event.target.classList.contains("lock-group")) {
         // Confirm
       }
       event.target.parentElement.classList.add("d-none");
@@ -304,7 +323,7 @@ function showSendNotifyModal() {
       const template = `<tr class="d-flex justify-content-around align-items-center roomCard">
       <td class="d-flex flex-row align-items-center">
           <div class="user-avatar" class="w-25 h-25">
-              <img src="/public/images/group.png" alt="">
+              <img src="/images/group.png" alt="">
           </div>
           <span class="text-dark ml-4 mb-0 pointer roomNameLabel">${room.name}</span>
       </td>
