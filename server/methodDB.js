@@ -2,8 +2,8 @@ import mssql from "mssql";
 
 const config = {
   user: "sa", // thay
-  password: "123", // thay
-  server: "MSI", // thay
+  password: "123456", // thay
+  server: "127.0.0.1", // thay
   database: "Chat RPC", // thay
   options: {
     encrypt: true,
@@ -224,6 +224,46 @@ function getMembersOfRoom(nameRoom) {
   });
 }
 
+function lockRoom(nameRoom) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `UPDATE rooms SET isLock = 1 WHERE name = N'${nameRoom}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+  });
+}
+
+function unlockRoom(nameRoom) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `UPDATE rooms SET isLock = 0 WHERE name = N'${nameRoom}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+  });
+}
+
 export {
   getMembers,
   getRooms,
@@ -235,4 +275,6 @@ export {
   insertRoom,
   insertMemberToRoom,
   getMembersOfRoom,
+  lockRoom,
+  unlockRoom,
 };

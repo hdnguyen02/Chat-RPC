@@ -14,6 +14,8 @@ import {
   insertRoom,
   insertMemberToRoom,
   getMembersOfRoom,
+  lockRoom,
+  unlockRoom,
 } from "./methodDB.js";
 
 const app = express();
@@ -29,7 +31,7 @@ let storage = { members: [], rooms: [] };
 // rooms: {name, members: []}
 generateData();
 
-async function generateData() {
+async function generateData(callback) {
   try {
     getMembers().then((members) => {
       members.forEach((member) => {
@@ -37,16 +39,24 @@ async function generateData() {
         storage.members.push({ ...member, socketID: null });
       });
     });
-    getRooms().then((rooms) => {
-      rooms.forEach((room) => {
-        getMembersOfRoom(room.name).then((result) => {
-          storage.rooms.push({
-            name: room.name,
-            members: result.map((record) => record.username_member),
-          });
-        });
+    storage.rooms.length = 0;
+    // Fetch rooms and members of each room
+    const rooms = await getRooms();
+    for (const room of rooms) {
+      const result = await getMembersOfRoom(room.name);
+      storage.rooms.push({
+        name: room.name,
+        members: result.map((record) => record.username_member),
+        isLock: room.isLock,
       });
-    });
+    }
+    if (callback !== null && typeof callback === 'function') {
+      console.log("Callback");
+      storage.rooms.forEach((room) => {
+        console.log(room.isLock);
+      });
+      await callback(storage.rooms);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -94,6 +104,9 @@ io.on("connection", (socket) => {
     getRoomWithName(nameRoom)
       .then((recordset) => {
         let room = recordset[0];
+        if(room.isLock === true){
+          throw new Error("Room chat đã bị khóa!")
+        }
         if (room.password != passwordRoom) {
           throw new Error("Sai mật khẩu chat room!");
         }
@@ -238,6 +251,28 @@ adminIO.on("connection", (socket) => {
           console.log(error.message);
         });
     });
+  });
+
+  socket.on("lock room", ({ roomName }, callback) => {
+    console.log("Lock room " + roomName);
+    lockRoom(roomName)
+      .then(() =>{
+        generateData(callback);
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
+
+  socket.on("unlock room", ({ roomName }, callback) => {
+    console.log("Unlock room " + roomName);
+    unlockRoom(roomName)
+      .then(() =>{
+        generateData(callback);
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
   });
 });
 

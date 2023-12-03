@@ -91,10 +91,9 @@ function renderSingleMemberCard(username, status) {
 }
 
 async function renderRoomCards(roomArray) {
-  roomArea.innerHTML = "";
-  console.log(roomArray);
+  roomArea.innerHTML = '';
   roomArray.forEach((room) => {
-    renderSingleRoomCard(room.name, "unknown", room.members.length);
+    renderSingleRoomCard(room.name, "unknown", room.members.length, room.isLock);
   });
   // Add event to room cards
   $$(".table-rooms tbody tr td:last-child .drop-down-btn").forEach(
@@ -108,11 +107,14 @@ async function renderRoomCards(roomArray) {
   );
 }
 
-function renderSingleRoomCard(name, ownerName, quantity) {
+function renderSingleRoomCard(name, ownerName, quantity, isLock) {
   const template = `<tr class="d-flex justify-content-between align-items-center">
   <td class="d-flex flex-column align-items-start w-25">
       <h10 class="text-dark font-weight-bold">${name}</h10>
       <h11 class="text-gray-500">${quantity} members</h11>
+      <h11 class="text-gray-500">
+        ${isLock === true ? "Locked" : "UnLock"}
+      </h11>
   </td>
   
   <td>
@@ -122,23 +124,26 @@ function renderSingleRoomCard(name, ownerName, quantity) {
       </button>
       <div class="drop-down-list d-none">
           <div class="drop-down-item send-notify">Gửi thông báo</div>
-          <div class="drop-down-item lock-group">Khóa phòng</div>
+          <div class="drop-down-item lock-group">${isLock === false ? "Khóa phòng" : "Mở khóa phòng"}</div>
       </div>
     </div>
   </td>
 </tr>`;
   roomArea.insertAdjacentHTML("beforeend", template);
   // Add event to dropdown item
-  roomArea
-    .querySelector("tr:last-child .drop-down-list .drop-down-item")
-    .addEventListener("click", function (event) {
-      if (event.target.classList.contains("send-notify")) {
+  const dropdownItems = roomArea.querySelectorAll("tr:last-child .drop-down-item");
+  dropdownItems.forEach((item) => {
+    item.addEventListener("click", function (event) {
+      if (item.classList.contains("send-notify")) {
         showSendNotifyModal();
-      } else if (event.target.classList.contains("lock-group")) {
-        // Confirm
+      } else if (item.classList.contains("lock-group")) {
+        if(isLock === false) showDialogLockRoom(name);
+        else if(isLock === true) showDialogUnlockRoom(name);
       }
-      event.target.parentElement.classList.add("d-none");
+      // Hide the dropdown after clicking an item
+      item.parentElement.classList.add("d-none");
     });
+  });
 }
 
 // Handle Animation Event
@@ -287,6 +292,7 @@ function showCreateRoomModal() {
 }
 
 function showSendNotifyModal() {
+  console.log("Onclick Send !!!");
   const selectedRooms = [];
   const modalTemplate = `<div class="modal d-block" id="sendNotifyModal">
   <div class="modal-dialog modal-dialog-centered">
@@ -381,6 +387,97 @@ function showSendNotifyModal() {
     }
   });
 }
+
+function showDialogLockRoom(nameRoom) {
+  const modalTemplate = `<div class="modal d-block" id="dialogLookRoom" style="">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="width: 70%; height: 200px; text-align: center;">
+            <div id="custom-dialog">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div id="dialog-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                    Confirmation
+                </div>
+                <div id="dialog-content" style="margin-bottom: 20px; margin-top: 30px">
+                Xác nhận muốn khóa phòng này?
+                </div>
+                <button id="confirm-button" onclick="confirmAction()" style="background-color: #4caf50; color: #fff; padding: 10px 20px; border: none; cursor: pointer; margin-top: 30px;">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+  $("body").insertAdjacentHTML("beforeend", modalTemplate);
+  $("#dialogLookRoom").addEventListener("click", function (event) {
+    // Close modal
+    if (
+      event.target == this ||
+      event.target == this.querySelector("button.close span")
+    ) {
+      $("body").removeChild(this);
+    }
+    // Confirm to look the room chat
+    else if (event.target == this.querySelector("#confirm-button")) {
+      socket.emit(
+        "lock room",
+        { roomName:  nameRoom},
+        async function () {
+          await renderRoomCards(roomStorage);
+        }
+      );
+      $("body").removeChild(this);
+    }
+  });
+}
+
+function showDialogUnlockRoom(nameRoom) {
+  const modalTemplate = `<div class="modal d-block" id="dialogLookRoom" style="">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="width: 70%; height: 200px; text-align: center;">
+            <div id="custom-dialog">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div id="dialog-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                    Confirmation
+                </div>
+                <div id="dialog-content" style="margin-bottom: 20px; margin-top: 30px">
+                    Xác nhận muốn hủy khóa phòng này?
+                </div>
+                <button id="confirm-button" onclick="confirmAction()" style="background-color: #4caf50; color: #fff; padding: 10px 20px; border: none; cursor: pointer; margin-top: 30px;">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+  $("body").insertAdjacentHTML("beforeend", modalTemplate);
+  $("#dialogLookRoom").addEventListener("click", function (event) {
+    // Close modal
+    if (
+      event.target == this ||
+      event.target == this.querySelector("button.close span")
+    ) {
+      $("body").removeChild(this);
+    }
+    // Confirm to look the room chat
+    else if (event.target == this.querySelector("#confirm-button")) {
+      socket.emit(
+        "unlock room",
+        { roomName:  nameRoom},
+        function () {
+          renderRoomCards(roomStorage);
+        }
+      );
+      $("body").removeChild(this);
+    }
+  });
+}
+
 
 function showLoginModal() {
   const template = `<div class="modal d-block" id="loginModal" style="background-color: rgba(0, 0, 0, 0.3);">
