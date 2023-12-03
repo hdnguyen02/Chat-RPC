@@ -28,7 +28,7 @@ formlogin.addEventListener("submit", function (event) {
     return;
   }
   socket.emit("sendUsername", { username}, function(check){
-    if (isLogin) {
+    if (check) {
       containerChat.style.display = "none";
       containerLogin.style.display = "block";
     } else {
