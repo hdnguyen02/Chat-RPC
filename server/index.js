@@ -3,6 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import hbs from "hbs";
 
+
 import {
   getMembers,
   getRooms,
@@ -16,6 +17,9 @@ import {
   getMembersOfRoom,
   lockRoom,
   unlockRoom,
+  lockMember,
+  unlockMember,
+  getMemberWithName,
 } from "./methodDB.js";
 
 const app = express();
@@ -81,8 +85,19 @@ function sendListRoom(typeSend) {
 
 io.on("connection", (socket) => {
   console.log("Client vừa kết nối: " + socket.id);
-  socket.on("sendUsername", (data) => {
+  socket.on("sendUsername", (data, callback) => {
     let { username } = data;
+    // Check tai khoan co bi khoa hay khong
+    getMemberWithName(username)
+    .then((recordset) => {
+      let member = recordset[0];
+      if(member.isLock === true){
+        throw new Error("Tài khoản của bạn đã bị khóa!")
+      }})
+      .catch((error) => {
+        socket.emit("notify", error.message);
+      });
+    callback(false);
     insertMember(username).catch((error) => {});
     sendListRoom(socket);
 
@@ -274,7 +289,26 @@ adminIO.on("connection", (socket) => {
         console.log(error.message);
       });
   });
+
+  socket.on("lock member", ({ memberName }, callback) => {
+    console.log("Lock member " +  memberName);
+    lockMember( memberName)
+      .then()
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
+
+  socket.on("unlock member", ({ memberName }, callback) => {
+    console.log("Unlock member " +  memberName);
+    unlockMember( memberName)
+      .then()
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
 });
+
 
 function formaTime(time) {
   var day = time.getDate().toString().padStart(2, "0");

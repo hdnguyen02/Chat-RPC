@@ -27,9 +27,15 @@ formlogin.addEventListener("submit", function (event) {
     alert("Không để trống username!");
     return;
   }
-  socket.emit("sendUsername", { username });
-  isLogin = false;
-  changeScreen();
+  socket.emit("sendUsername", { username}, function(check){
+    if (isLogin) {
+      containerChat.style.display = "none";
+      containerLogin.style.display = "block";
+    } else {
+      containerChat.style.display = "block";
+      containerLogin.style.display = "none";
+    }
+  });
 });
 btnNewChatRoom.addEventListener("click", function () {
   let nameRoom = $("input[name='name-chat-room']").value.trim();
@@ -51,6 +57,16 @@ btnNewChatRoom.addEventListener("click", function () {
     username: inputUsername.value,
   });
 });
+
+function changeScreen() {
+  if (isLogin) {
+    containerChat.style.display = "none";
+    containerLogin.style.display = "block";
+  } else {
+    containerChat.style.display = "block";
+    containerLogin.style.display = "none";
+  }
+}
 
 btnCloseModelEpcr.addEventListener("click", function () {
   $("#modelEnterPassWordChatRoom").style.display = "none  ";
@@ -222,16 +238,6 @@ socket.on("disconnect", function () {
   isLogin = true;
   changeScreen();
 });
-
-function changeScreen() {
-  if (isLogin) {
-    containerChat.style.display = "none";
-    containerLogin.style.display = "block";
-  } else {
-    containerChat.style.display = "block";
-    containerLogin.style.display = "none";
-  }
-}
 
 function messageReceiverTemplate(usernameSender, time, message) {
   return `<li class="clearfix">

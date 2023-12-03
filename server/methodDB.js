@@ -140,6 +140,26 @@ function getRoomWithName(nameRoom) {
   });
 }
 
+function getMemberWithName(nameMember) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `select * from members where username = N'${nameMember}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+  });
+}
+
 function insertMember(username) {
   return new Promise((resolve, reject) => {
     mssql.connect(config, (error) => {
@@ -264,6 +284,48 @@ function unlockRoom(nameRoom) {
   });
 }
 
+function lockMember(nameMember) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `UPDATE members SET isLock = 1 WHERE username = N'${nameMember}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+  });
+}
+
+function unlockMember(nameMember) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `UPDATE members SET isLock = 0 WHERE username = N'${nameMember}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+
+
+    
+  });
+}
 export {
   getMembers,
   getRooms,
@@ -277,4 +339,7 @@ export {
   getMembersOfRoom,
   lockRoom,
   unlockRoom,
+  lockMember,
+  unlockMember,
+  getMemberWithName,
 };
