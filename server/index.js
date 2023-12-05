@@ -20,6 +20,7 @@ import {
   lockMember,
   unlockMember,
   getMemberWithName,
+  LogOutRoom,
 } from "./methodDB.js";
 
 const app = express();
@@ -302,6 +303,15 @@ adminIO.on("connection", (socket) => {
   socket.on("unlock member", ({ memberName }, callback) => {
     console.log("Unlock member " +  memberName);
     unlockMember( memberName)
+      .then()
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
+
+  socket.on("logout room", ({ roomName, memberName }, callback) => {
+    console.log("logout member " +  memberName + "from" + roomName);
+    LogOutRoom( roomName, memberName)
       .then()
       .catch((error) => {
         console.log(error.message);

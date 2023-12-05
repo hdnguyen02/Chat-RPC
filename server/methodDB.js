@@ -304,6 +304,26 @@ function lockMember(nameMember) {
   });
 }
 
+function LogOutRoom(nameRoom, nameMember) {
+  return new Promise((resolve, reject) => {
+    mssql.connect(config, (error) => {
+      if (error) reject(error);
+      let request = new mssql.Request();
+      const sqlQuery = `DELETE FROM room_member WHERE name_room = N'${nameRoom} AND username_member = N'${nameMember}'`;
+      request
+        .query(sqlQuery)
+        .then((result) => {
+          mssql.close();
+          resolve(result.recordset);
+        })
+        .catch((error) => {
+          mssql.close();
+          reject(error);
+        });
+    });
+  });
+}
+
 function unlockMember(nameMember) {
   return new Promise((resolve, reject) => {
     mssql.connect(config, (error) => {
@@ -324,6 +344,7 @@ function unlockMember(nameMember) {
 
 
     
+    
   });
 }
 export {
@@ -342,4 +363,5 @@ export {
   lockMember,
   unlockMember,
   getMemberWithName,
+  LogOutRoom,
 };
