@@ -169,6 +169,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", (data) => {
+    
     let { nameRoom, username, message } = data;
     let time = formaTime(new Date());
     insertLog(username, nameRoom, "SEND_MESSAGE", time, message)

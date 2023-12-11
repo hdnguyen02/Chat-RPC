@@ -89,7 +89,7 @@ function handerJoinChat(event) {
   const curentTarget = event.currentTarget;
   const nameRoom = curentTarget.dataset.chatRoom;
   console.log(nameRoom);
-
+ 
   if (nameRoom in sessionStorage) {
     let password = sessionStorage.getItem(nameRoom);
     if (password === "null") {
@@ -169,9 +169,11 @@ socket.on("joinedChatRoom", (data) => {
                 </div>
             </div>
             <div class="col-lg-6 hidden-sm text-right">
-                <a href="javascript:void(0);" class="btn btn-outline-info"><i
-                        class="fa fa-cogs"></i></a>
-            </div>
+            <a onclick="handleLogOut(event)" href="javascript:void(0);" class="btn btn-outline-info" id="settingsButton"><i
+                    class="fa fa-cogs"></i></a>
+            <!-- Logout button -->
+            <button class="btn btn-outline-danger" id="logoutButton">Logout</button>
+        </div>
         </div>
     </div>
     <div class="chat-history">
@@ -199,7 +201,16 @@ socket.on("joinedChatRoom", (data) => {
     </div>
     </div>
     `;
+    console.log(containerRoomChat.querySelector("#logoutButton"));
   containerRoomChat.innerHTML = html;
+  document
+  .querySelector("#logoutButton")
+  .addEventListener("click", function() {
+    console.log("Pressed the button");
+    socket.emit("sendMessage", {curentChatRoom, username});
+    isLogin = true;
+  changeScreen();
+  });
   $("#container-chat-history").innerHTML = htmlMessages.join("");
 });
 
