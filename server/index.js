@@ -93,26 +93,28 @@ io.on("connection", (socket) => {
     .then((recordset) => {
       let member = recordset[0];
       if(member.isLock === true){
+        callback(true);
         throw new Error("Tài khoản của bạn đã bị khóa!")
-      }})
+      }
+      callback(false);
+      insertMember(username).catch((error) => {});
+      sendListRoom(socket);
+  
+      let obj = storage.members.find((user) => user.username == username);
+      if (!obj) {
+        storage.members.push({ username, enable: true, socketID: socket.id });
+      } else if (obj.socketID) {
+        let prevID = obj.socketID;
+        obj.socketID = socket.id;
+        io.sockets.sockets.get(prevID).disconnect();
+      } else {
+        obj.socketID = socket.id;
+      }
+      io.of("/admin").emit("client-login", username, storage.members);
+    })
       .catch((error) => {
         socket.emit("notify", error.message);
       });
-    callback(false);
-    insertMember(username).catch((error) => {});
-    sendListRoom(socket);
-
-    let obj = storage.members.find((user) => user.username == username);
-    if (!obj) {
-      storage.members.push({ username, enable: true, socketID: socket.id });
-    } else if (obj.socketID) {
-      let prevID = obj.socketID;
-      obj.socketID = socket.id;
-      io.sockets.sockets.get(prevID).disconnect();
-    } else {
-      obj.socketID = socket.id;
-    }
-    io.of("/admin").emit("client-login", username, storage.members);
   });
 
   socket.on("joinChatRoom", (data) => {
@@ -289,7 +291,16 @@ adminIO.on("connection", (socket) => {
     console.log("Lock room " + roomName);
     lockRoom(roomName)
       .then(() =>{
-        generateData(callback);
+        const roomToChange = storage.rooms.find((room) => room.name === roomName);
+        // Kiểm tra xem phòng có tồn tại không
+        if (roomToChange) {
+          // Thực hiện các thay đổi vào thuộc tính của phòng
+          roomToChange.isLock = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
+          io.of("/admin").emit("update rooms", storage.rooms);
+        } else {
+          console.log("Phòng không tồn tại trong storage.rooms");
+        }
       })
       .catch((error) => {
         console.log(error.message);
@@ -300,7 +311,16 @@ adminIO.on("connection", (socket) => {
     console.log("Unlock room " + roomName);
     unlockRoom(roomName)
       .then(() =>{
-        generateData(callback);
+        const roomToChange = storage.rooms.find((room) => room.name === roomName);
+        // Kiểm tra xem phòng có tồn tại không
+        if (roomToChange) {
+          // Thực hiện các thay đổi vào thuộc tính của phòng
+          roomToChange.isLock = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
+          io.of("/admin").emit("update rooms", storage.rooms);
+        } else {
+          console.log("Phòng không tồn tại trong storage.rooms");
+        }
       })
       .catch((error) => {
         console.log(error.message);
@@ -310,7 +330,18 @@ adminIO.on("connection", (socket) => {
   socket.on("lock member", ({ memberName }, callback) => {
     console.log("Lock member " +  memberName);
     lockMember( memberName)
-      .then()
+      .then(() => {
+        const memberToChange = storage.members.find((member) => member.username === memberName);
+        // Kiểm tra xem phòng có tồn tại không
+        if (memberToChange) {
+          // Thực hiện các thay đổi vào thuộc tính của phòng
+          memberToChange.isLock = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
+          io.of("/admin").emit("update members", storage.members);
+        } else {
+          console.log("Member không tồn tại trong storage.rooms");
+        }
+      })
       .catch((error) => {
         console.log(error.message);
       });
@@ -319,7 +350,18 @@ adminIO.on("connection", (socket) => {
   socket.on("unlock member", ({ memberName }, callback) => {
     console.log("Unlock member " +  memberName);
     unlockMember( memberName)
-      .then()
+      .then(() => {
+        const memberToChange = storage.members.find((member) => member.username === memberName);
+        // Kiểm tra xem phòng có tồn tại không
+        if (memberToChange) {
+          // Thực hiện các thay đổi vào thuộc tính của phòng
+          memberToChange.isLock = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
+          io.of("/admin").emit("update members", storage.members);
+        } else {
+          console.log("Member không tồn tại trong storage.rooms");
+        }
+        })
       .catch((error) => {
         console.log(error.message);
       });

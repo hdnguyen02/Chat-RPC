@@ -106,7 +106,7 @@ function renderSingleMemberCard(username, status, isLock) {
 async function renderRoomCards(roomArray) {
   roomArea.innerHTML = '';
   roomArray.forEach((room) => {
-    renderSingleRoomCard(room.name, "unknown", room.members.length, room.isLock);
+    renderSingleRoomCard(room.name, room.members.length, room.isLock);
   });
   // Add event to room cards
   $$(".table-rooms tbody tr td:last-child .drop-down-btn").forEach(
@@ -120,13 +120,13 @@ async function renderRoomCards(roomArray) {
   );
 }
 
-function renderSingleRoomCard(name, ownerName, quantity, isLock) {
+function renderSingleRoomCard(name, quantity, isLock) {
   const template = `<tr class="d-flex justify-content-between align-items-center">
   <td class="d-flex flex-column align-items-start w-25">
       <h10 class="text-dark font-weight-bold">${name}</h10>
       <h11 class="text-gray-500">${quantity} members</h11>
       <h11 class="text-gray-500">
-        ${isLock === true ? "Locked" : "UnLock"}
+        ${isLock === true ? "Đã bị khóa" : ""}
       </h11>
   </td>
   
@@ -436,10 +436,7 @@ function showDialogLockRoom(nameRoom) {
     else if (event.target == this.querySelector("#confirm-button")) {
       socket.emit(
         "lock room",
-        { roomName:  nameRoom},
-        async function () {
-          await renderRoomCards(roomStorage);
-        }
+        { roomName:  nameRoom}
       );
       $("body").removeChild(this);
     }
@@ -545,6 +542,15 @@ function handleSocket(socket) {
     roomStorage = data;
     renderRoomCards(roomStorage);
     totalRoomText.textContent = roomStorage.length;
+  });
+
+  socket.on("update members", function (data) {
+    userStorage = data;
+    renderMemberCards(userStorage);
+    onlineMemberText.textContent = members.reduce(
+      (prev, member) => (member.socketID ? prev + 1 : prev),
+      0
+    );
   });
 
   socket.on("client-logout", (members) => {
