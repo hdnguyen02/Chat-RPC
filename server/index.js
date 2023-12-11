@@ -217,13 +217,14 @@ io.on("connection", (socket) => {
     console.log(obj);
   });
 
-  socket.on("logout Room", (data, callback) => {
+  socket.on("logout Room", (data) => {
     let { curentChatRoom, username } = data;
     console.log("logout member " +  username + " from " + curentChatRoom);
     LogOutRoom( curentChatRoom, username)
       .then(() => {
-        callback();
-        res.render("client");
+        sendListRoom(io);
+        socket.emit("logoutedRoom", {nameRoom: curentChatRoom});
+        io.of("/admin").emit("update rooms", storage.rooms);
       })
       .catch((error) => {
         console.log(error.message);

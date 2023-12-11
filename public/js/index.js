@@ -207,10 +207,17 @@ socket.on("joinedChatRoom", (data) => {
   .querySelector("#logoutButton")
   .addEventListener("click", function() {
     console.log("Pressed the button");
-    socket.emit("logout Room", {curentChatRoom, username}, function(){
-      
+    socket.emit("logout Room", {curentChatRoom, username});
   });
   $("#container-chat-history").innerHTML = htmlMessages.join("");
+});
+
+socket.on("logoutedRoom", (data) => {
+  let { nameRoom} = data;
+  sessionStorage.removeItem(nameRoom);
+
+  let html = '<p style="font-size: 18px; text-align: center;">Chưa chọn đoạn chat nào</p>';
+  containerRoomChat.innerHTML = html;
 });
 
 socket.on("sendListRoom", (roomsDto) => {
