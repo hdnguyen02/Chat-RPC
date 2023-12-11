@@ -97,7 +97,6 @@ function insertLog(username, nameRoom, activity, time, data) {
   return new Promise((resolve, reject) => {
     mssql.connect(config, (error) => {
       if (error) reject(error);
-      console.log("ABC");
       let request = new mssql.Request();
       const colums = "(username_member, name_room,activity,time,data)";
       const sqlQuery = `INSERT INTO logs ${colums} VALUES (@Value1,@Value2,@Value3,@Value4,@Value5)`;
@@ -310,7 +309,7 @@ function LogOutRoom(nameRoom, nameMember) {
     mssql.connect(config, (error) => {
       if (error) reject(error);
       let request = new mssql.Request();
-      const sqlQuery = `DELETE FROM room_member WHERE name_room = N'${nameRoom} AND username_member = N'${nameMember}'`;
+      const sqlQuery = `DELETE FROM room_member WHERE name_room = N'${nameRoom}' AND username_member = N'${nameMember}'`;
       request
         .query(sqlQuery)
         .then((result) => {

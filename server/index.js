@@ -169,8 +169,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", (data) => {
-    
-    let { nameRoom, username, message } = data;
+        let { nameRoom, username, message } = data;
     let time = formaTime(new Date());
     insertLog(username, nameRoom, "SEND_MESSAGE", time, message)
       .then(() => {
@@ -217,12 +216,26 @@ io.on("connection", (socket) => {
     }
     console.log(obj);
   });
+
+  socket.on("logout Room", (data, callback) => {
+    let { curentChatRoom, username } = data;
+    console.log("logout member " +  username + " from " + curentChatRoom);
+    LogOutRoom( curentChatRoom, username)
+      .then(() => {
+        callback();
+        res.render("client");
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
+
 });
 
+// -------ADMIN HANDLE REQUEST FROM CLIENT ------//
 const adminIO = io.of("/admin");
 adminIO.on("connection", (socket) => {
   console.log("Admin vừa kết nối: " + socket.id);
-
   socket.on("check login", (password, callback) => {
     if (password === adminPassword) {
       callback(null, {
@@ -233,6 +246,7 @@ adminIO.on("connection", (socket) => {
       callback("Incorrect Password", null);
     }
   });
+
   socket.on("new room", (newRoom, callback) => {
     if (storage.rooms.findIndex((room) => room.name == newRoom.name) != -1) {
       callback("Room existed", null);
@@ -304,15 +318,6 @@ adminIO.on("connection", (socket) => {
   socket.on("unlock member", ({ memberName }, callback) => {
     console.log("Unlock member " +  memberName);
     unlockMember( memberName)
-      .then()
-      .catch((error) => {
-        console.log(error.message);
-      });
-  });
-
-  socket.on("logout room", ({ roomName, memberName }, callback) => {
-    console.log("logout member " +  memberName + "from" + roomName);
-    LogOutRoom( roomName, memberName)
       .then()
       .catch((error) => {
         console.log(error.message);

@@ -207,9 +207,8 @@ socket.on("joinedChatRoom", (data) => {
   .querySelector("#logoutButton")
   .addEventListener("click", function() {
     console.log("Pressed the button");
-    socket.emit("sendMessage", {curentChatRoom, username});
-    isLogin = true;
-  changeScreen();
+    socket.emit("logout Room", {curentChatRoom, username}, function(){
+      
   });
   $("#container-chat-history").innerHTML = htmlMessages.join("");
 });
