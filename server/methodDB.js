@@ -289,7 +289,7 @@ function lockMember(nameMember) {
     mssql.connect(config, (error) => {
       if (error) reject(error);
       let request = new mssql.Request();
-      const sqlQuery = `UPDATE members SET isLock = 1 WHERE username = N'${nameMember}'`;
+      const sqlQuery = `UPDATE members SET enable = 0 WHERE username = N'${nameMember}'`;
       request
         .query(sqlQuery)
         .then((result) => {
@@ -329,7 +329,7 @@ function unlockMember(nameMember) {
     mssql.connect(config, (error) => {
       if (error) reject(error);
       let request = new mssql.Request();
-      const sqlQuery = `UPDATE members SET isLock = 0 WHERE username = N'${nameMember}'`;
+      const sqlQuery = `UPDATE members SET enable = 1 WHERE username = N'${nameMember}'`;
       request
         .query(sqlQuery)
         .then((result) => {

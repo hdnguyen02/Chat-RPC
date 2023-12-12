@@ -89,7 +89,7 @@ function handerJoinChat(event) {
   const curentTarget = event.currentTarget;
   const nameRoom = curentTarget.dataset.chatRoom;
   console.log(nameRoom);
- 
+  
   if (nameRoom in sessionStorage) {
     let password = sessionStorage.getItem(nameRoom);
     if (password === "null") {
@@ -123,7 +123,16 @@ socket.on("notify", (data) => {
 });
 
 socket.on("receiveMessage", (data) => {
-  let { usernameSend, message, time } = data;
+  let { usernameSend, activity, message, time } = data;
+  if(activity){
+    if(activity == "SEND_OUT"){
+      $("#container-chat-history").innerHTML += messageOut(
+        usernameSend,
+        time
+      );
+      return;
+    }
+  }
   if (username == usernameSend) {
     $("#container-chat-history").innerHTML += messageSenderTemplate(
       username,
@@ -145,6 +154,11 @@ socket.on("joinedChatRoom", (data) => {
   curentChatRoom = nameRoom;
 
   let htmlMessages = logs.map((log) => {
+    if(log.activity){
+      if(log.activity == "SEND_OUT"){
+        return messageOut(log.usernameSend, log.time);
+      }
+    }
     if (username == log.usernameSend) {
       return messageSenderTemplate(username, log.time, log.message);
     }
@@ -216,7 +230,7 @@ socket.on("logoutedRoom", (data) => {
   let { nameRoom} = data;
   sessionStorage.removeItem(nameRoom);
 
-  let html = '<p style="font-size: 18px; text-align: center;">Chưa chọn đoạn chat nào</p>';
+  let html = '<p style="font-size: 18px; text-align: center; display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;">Chưa chọn đoạn chat nào</p>';
   containerRoomChat.innerHTML = html;
 });
 
@@ -255,6 +269,19 @@ socket.on("disconnect", function () {
   isLogin = true;
   changeScreen();
 });
+
+socket.on("beLocked", () => {
+  isLogin = true;
+  changeScreen();
+});
+
+function messageOut(usernameSender, time) {
+  return `<li style="text-align: center;" class="clearfix">
+              <div style="text-align: center;"><smail style="font-size: 14px"></smail></div>
+              <small class="message-data-time">(${time})</small>
+              <div style="color: red; text-align: center;">"Người dùng ${usernameSender} đã rời khỏi cuộc trò truyện</div>
+          </li>`;
+}
 
 function messageReceiverTemplate(usernameSender, time, message) {
   return `<li class="clearfix">

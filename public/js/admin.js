@@ -35,7 +35,7 @@ async function renderHomePage(data) {
 async function renderMemberCards(userArray) {
   memberArea.innerHTML = "";
   userArray.forEach((user) => {
-    renderSingleMemberCard(user.username, user.socketID ? "Online" : "Offline",user.isLock);
+    renderSingleMemberCard(user.username, user.socketID ? "Online" : "Offline",user.enable);
   });
   // Add event to user card
   $$(".table-users tbody tr td:last-child .drop-down-btn").forEach(
@@ -49,7 +49,7 @@ async function renderMemberCards(userArray) {
   );
 }
 
-function renderSingleMemberCard(username, status, isLock) {
+function renderSingleMemberCard(username, status, enable) {
   const template = `<tr class="d-flex justify-content-between align-items-center">
   <td class="d-flex flex-row">
       <div class="user-avatar" class="w-25 h-25">
@@ -57,7 +57,7 @@ function renderSingleMemberCard(username, status, isLock) {
       </div>
       <div class="user-info ml-3">
           <h5 class="font-weight-bold text-dark">${username}</h5>
-          <h10 class="font-weight-bold text-dark">${isLock === true ? "Đã bị khóa" : ""}</h5>
+          <h10 class="font-weight-bold text-dark">${enable !== true ? "Đã bị khóa" : ""}</h5>
           <div class="small">
               <div class="status-dot ${
                 status == "Online" ? "bg-success" : "bg-danger"
@@ -72,7 +72,7 @@ function renderSingleMemberCard(username, status, isLock) {
           <i class="fa-solid fa-ellipsis"></i>
       </button>
       <div class="drop-down-list d-none">
-          <div class="drop-down-item lock-member">${isLock === true ? "Mở khóa" : "Khóa tài khoản"}</div>
+          <div class="drop-down-item lock-member">${enable !== true ? "Mở khóa" : "Khóa tài khoản"}</div>
       </div>
     </div>
   </td>
@@ -84,7 +84,7 @@ function renderSingleMemberCard(username, status, isLock) {
     .addEventListener("click", function (event) {
       if (event.target.classList.contains("lock-member")) {
         // Function lock member o day
-        if(isLock==false ){
+        if(enable === true ){
           socket.emit(
             "lock member",
             {memberName: username}

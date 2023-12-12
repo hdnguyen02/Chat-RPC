@@ -92,9 +92,11 @@ io.on("connection", (socket) => {
     getMemberWithName(username)
     .then((recordset) => {
       let member = recordset[0];
-      if(member.isLock === true){
-        callback(true);
-        throw new Error("Tài khoản của bạn đã bị khóa!")
+      if(member){
+        if(member.enable === false){
+          callback(true);
+          throw new Error("Tài khoản của bạn đã bị khóa!")
+        }
       }
       callback(false);
       insertMember(username).catch((error) => {});
@@ -221,17 +223,49 @@ io.on("connection", (socket) => {
 
   socket.on("logout Room", (data) => {
     let { curentChatRoom, username } = data;
-    console.log("logout member " +  username + " from " + curentChatRoom);
-    LogOutRoom( curentChatRoom, username)
+    console.log("Logout member " +  username + " from " + curentChatRoom);
+    let time = formaTime(new Date());
+    LogOutRoom(curentChatRoom, username)
       .then(() => {
         sendListRoom(io);
         socket.emit("logoutedRoom", {nameRoom: curentChatRoom});
-        io.of("/admin").emit("update rooms", storage.rooms);
+
+        // Insert log for sending out
+        insertLog(username, curentChatRoom, "SEND_OUT", time, "OUT");
+      })
+      .then(() => {
+        io.to(curentChatRoom).emit("receiveMessage", {
+          usernameSend: username,
+          activity: "SEND_OUT",
+          time,
+        });
+      })
+      .then(() => {
+        getMembersOfRoom(curentChatRoom)
+          .then((memberRecords) => {
+            let members = memberRecords.map(
+              (member) => member.username_member
+            );
+            socket.to(curentChatRoom).emit("newMemberJoined", {
+              members,
+              sizeMembers: memberRecords.length,
+            });
+            const obj = storage.rooms.find((room) => room.name === curentChatRoom);
+            obj.members = members;
+            io.of("/admin").emit("update rooms", storage.rooms);
+          })
+          .catch((error) => {
+            // Xử lý lỗi nếu có
+            console.error(error);
+          });
       })
       .catch((error) => {
         console.log(error.message);
+        // Handle error, e.g., notify client about the error
+        socket.emit("error", { message: error.message });
       });
   });
+  
 
 });
 
@@ -335,9 +369,10 @@ adminIO.on("connection", (socket) => {
         // Kiểm tra xem phòng có tồn tại không
         if (memberToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
-          memberToChange.isLock = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          memberToChange.enable = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update members", storage.members);
+          io.to(memberToChange.socketID).emit("beLocked");
         } else {
           console.log("Member không tồn tại trong storage.rooms");
         }
@@ -355,7 +390,7 @@ adminIO.on("connection", (socket) => {
         // Kiểm tra xem phòng có tồn tại không
         if (memberToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
-          memberToChange.isLock = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
+          memberToChange.enable = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update members", storage.members);
         } else {
