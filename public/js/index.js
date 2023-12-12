@@ -183,11 +183,20 @@ socket.on("joinedChatRoom", (data) => {
                 </div>
             </div>
             <div class="col-lg-6 hidden-sm text-right">
-            <a onclick="handleLogOut(event)" href="javascript:void(0);" class="btn btn-outline-info" id="settingsButton"><i
-                    class="fa fa-cogs"></i></a>
-            <!-- Logout button -->
-            <button class="btn btn-outline-danger" id="logoutButton">Logout</button>
+    <div class="dropdown">
+        <button class="btn btn-outline-info dropdown-toggle" type="button" id="settingsDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cogs"></i>
+        </button>
+        <div class="dropdown-menu" aria-labelledby="settingsDropdownButton">
+            <a class="dropdown-item" id="logoutButton" href="javascript:void(0);" onclick="handleLogout()">
+                <i class="fa fa-sign-out-alt"></i> Logout
+            </a>
         </div>
+    </div>
+</div>
+
+        
+        
         </div>
     </div>
     <div class="chat-history">
