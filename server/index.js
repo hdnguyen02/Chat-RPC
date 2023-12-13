@@ -372,7 +372,7 @@ adminIO.on("connection", (socket) => {
           memberToChange.enable = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update members", storage.members);
-          io.to(memberToChange.socketID).emit("beLocked");
+          //io.to(memberToChange.socketID).emit("beLocked");
         } else {
           console.log("Member không tồn tại trong storage.rooms");
         }
