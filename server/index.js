@@ -332,6 +332,7 @@ adminIO.on("connection", (socket) => {
           roomToChange.isLock = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update rooms", storage.rooms);
+          io.to(roomName).emit("roomBeLocked", {nameRoom: roomName});
         } else {
           console.log("Phòng không tồn tại trong storage.rooms");
         }
@@ -372,7 +373,8 @@ adminIO.on("connection", (socket) => {
           memberToChange.enable = false; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update members", storage.members);
-          //io.to(memberToChange.socketID).emit("beLocked");
+          io.to(memberToChange.socketID).emit("beLocked");
+          io.sockets.sockets.get(memberToChange.socketID).disconnect();
         } else {
           console.log("Member không tồn tại trong storage.rooms");
         }

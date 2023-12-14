@@ -282,6 +282,14 @@ socket.on("disconnect", function () {
 socket.on("beLocked", () => {
   isLogin = true;
   changeScreen();
+  alert(`Tài khoản của bạn đã bị khóa!!!!`);
+});
+
+socket.on("roomBeLocked", (data) => {
+  let { nameRoom } = data;
+  alert(`Room chat ${nameRoom} đã bị khóa!!!`);
+  let html = '<p style="font-size: 18px; text-align: center; display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;">Chưa chọn đoạn chat nào</p>';
+  containerRoomChat.innerHTML = html;
 });
 
 function messageOut(usernameSender, time) {
