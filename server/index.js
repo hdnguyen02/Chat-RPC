@@ -32,8 +32,6 @@ app.use(express.static("public"));
 
 const adminPassword = "123";
 let storage = { members: [], rooms: [] };
-// member: {username, enable, socketID}
-// rooms: {name, members: []}
 generateData();
 
 async function generateData(callback) {
@@ -85,10 +83,8 @@ function sendListRoom(typeSend) {
 }
 
 io.on("connection", (socket) => {
-  console.log("Client vừa kết nối: " + socket.id);
   socket.on("sendUsername", (data, callback) => {
     let { username } = data;
-    // Check tai khoan co bi khoa hay khong
     getMemberWithName(username)
     .then((recordset) => {
       let member = recordset[0];
@@ -120,8 +116,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinChatRoom", (data) => {
+    let time = formaTime(new Date())
     let { nameRoom, passwordRoom, username } = data;
-    getRoomWithName(nameRoom)
+      getRoomWithName(nameRoom)
       .then((recordset) => {
         let room = recordset[0];
         if(room.isLock === true){
@@ -130,7 +127,7 @@ io.on("connection", (socket) => {
         if (room.password != passwordRoom) {
           throw new Error("Sai mật khẩu chat room!");
         }
-        return insertMemberToRoom(username, nameRoom);
+        return insertMemberToRoom(username, nameRoom, time) 
       })
       .then(() => {
         return getMembersOfRoom(nameRoom);
@@ -155,8 +152,15 @@ io.on("connection", (socket) => {
             members,
             logs,
           });
+          
+
+          // thông báo đến toàn bộ nhóm chat có thằng join vài. 
+        
+
           socket.to(nameRoom).emit("newMemberJoined", {
-            members,
+            member: username, // gửi qua kia đển render. 
+            members,// thành viên mới gia nhập => nhưng không có gửi cho mình. 
+            time,
             sizeMembers: recordsetGetMemberOfRoom.length,
           });
 

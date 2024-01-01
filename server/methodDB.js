@@ -6,7 +6,7 @@ const config = {
   server: "127.0.0.1", // thay
   database: "Chat RPC", // thay
   options: {
-    encrypt: true,
+    encrypt: false,
     trustServerCertificate: true,
   },
 };
@@ -203,13 +203,14 @@ function insertRoom(nameRoom, password, username) {
   });
 }
 
-function insertMemberToRoom(username, nameRoom) {
+function insertMemberToRoom(username, nameRoom,time) {
   return new Promise((resolve, reject) => {
     mssql.connect(config, (error) => {
       if (error) reject(error);
       let request = new mssql.Request();
       request.input("nameRoom", mssql.NVarChar, nameRoom);
       request.input("username", mssql.NVarChar, username);
+      request.input("time", mssql.NVarChar, time);
       request
         .execute("spInsertMemberToRoom")
         .then((result) => {

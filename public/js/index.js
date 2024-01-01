@@ -73,9 +73,7 @@ btnCloseModelEpcr.addEventListener("click", function () {
 });
 
 btnJoinChatRoom.addEventListener("click", function () {
-  // lấy ra giá trị chat room.
   let textEnterPassword = $("input[name='enter-password']").value;
-  // sau khi nó nhấp vào tiến hành reset value
   $("#modelEnterPassWordChatRoom").style.display = "none";
   $("input[name='enter-password']").value = "";
   socket.emit("joinChatRoom", {
@@ -150,13 +148,15 @@ socket.on("receiveMessage", (data) => {
 
 socket.on("joinedChatRoom", (data) => {
   let { nameRoom, password, members, logs } = data;
-  sessionStorage.setItem(nameRoom, password);
-  curentChatRoom = nameRoom;
-
+  sessionStorage.setItem(nameRoom, password)
+  curentChatRoom = nameRoom
   let htmlMessages = logs.map((log) => {
     if(log.activity){
       if(log.activity == "SEND_OUT"){
         return messageOut(log.usernameSend, log.time);
+      }
+      else if (log.activity == "JOIN") {
+        return messageJoin(log.usernameSend, log.time)
       }
     }
     if (username == log.usernameSend) {
@@ -165,7 +165,14 @@ socket.on("joinedChatRoom", (data) => {
     return messageReceiverTemplate(log.usernameSend, log.time, log.message);
   });
 
-  let htmlTagLiMember = members.map((member) => `<li>${member}</li>`);
+  let htmlTagLiMember = members.map((member) => {
+    if (member == username) {
+      return `<li style="color: green;">${member} (Bạn)</li>`
+    }
+    else {
+      return `<li>${member}</li>`
+    }
+  });
   let html = `
     <div class="d-flex justify-content-between">
     <div class="vh-100 w-100">
@@ -189,7 +196,7 @@ socket.on("joinedChatRoom", (data) => {
         </button>
         <div class="dropdown-menu" aria-labelledby="settingsDropdownButton">
             <a class="dropdown-item" id="logoutButton" href="javascript:void(0);" onclick="handleLogout()">
-                <i class="fa fa-sign-out-alt"></i> Logout
+                <i class="fa fa-sign-out-alt"></i> Leave
             </a>
         </div>
     </div>
@@ -223,22 +230,19 @@ socket.on("joinedChatRoom", (data) => {
         )}</ul> </div>
     </div>
     </div>
-    `;
-    console.log(containerRoomChat.querySelector("#logoutButton"));
+    `
   containerRoomChat.innerHTML = html;
   document
   .querySelector("#logoutButton")
   .addEventListener("click", function() {
-    console.log("Pressed the button");
     socket.emit("logout Room", {curentChatRoom, username});
   });
-  $("#container-chat-history").innerHTML = htmlMessages.join("");
+  $("#container-chat-history").innerHTML = htmlMessages.join("")
 });
 
 socket.on("logoutedRoom", (data) => {
   let { nameRoom} = data;
   sessionStorage.removeItem(nameRoom);
-
   let html = '<p style="font-size: 18px; text-align: center; display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;">Chưa chọn đoạn chat nào</p>';
   containerRoomChat.innerHTML = html;
 });
@@ -267,11 +271,33 @@ socket.on("sendListRoom", (roomsDto) => {
 });
 
 socket.on("newMemberJoined", (data) => {
-  let { members, sizeMembers } = data;
-  let htmlTagLiMember = members.map((member) => `<li>${member}</li>`);
+  let { members, member , sizeMembers, time} = data;
+  let htmlTagLiMember = members.map((member) => {
+    if (member == username) {
+      return `<li style="color: green;">${member} (Bạn)</li>`
+    }
+    else {
+      return `<li>${member}</li>`
+    }
+  })
+  
   $("#ul-members").innerHTML = htmlTagLiMember.join("");
-  $("#size-members-1").innerText = `${sizeMembers} thành viên`;
-  $("#size-members-2").innerText = `Thành viên (${sizeMembers})`;
+  $("#size-members-1").innerText = `${sizeMembers} thành viên`
+  $("#size-members-2").innerText = `Thành viên (${sizeMembers})`
+  if (member == username) {
+    return `<li style="color: green;">${member} (Bạn)</li>`
+  }
+  else {
+    return `<li>${member}</li>`
+  }
+  $("#container-chat-history").innerHTML += messageJoin(member,time)
+
+  // có thằng member vừa tham gia. 
+  
+
+  
+
+
 });
 
 socket.on("disconnect", function () {
@@ -296,7 +322,15 @@ function messageOut(usernameSender, time) {
   return `<li style="text-align: center;" class="clearfix">
               <div style="text-align: center;"><smail style="font-size: 14px"></smail></div>
               <small class="message-data-time">(${time})</small>
-              <div style="color: red; text-align: center;">"Người dùng ${usernameSender} đã rời khỏi cuộc trò truyện</div>
+              <div style="color: red; text-align: center;">Người dùng ${usernameSender} đã rời khỏi cuộc trò truyện</div>
+          </li>`;
+}
+
+function messageJoin(usernameJoin, time) {
+  return `<li style="text-align: center;" class="clearfix">
+              <div style="text-align: center;"><smail style="font-size: 14px"></smail></div>
+              <small class="message-data-time">(${time})</small>
+              <div style="color: green; text-align: center;">Người dùng ${usernameJoin} đã tham gia cuộc trò chuyện</div>
           </li>`;
 }
 
@@ -310,7 +344,8 @@ function messageReceiverTemplate(usernameSender, time, message) {
           </li>`;
 }
 
-function messageSenderTemplate(username, time, message) {
+function messageSenderTemplate(username, time,
+   message) {
   return `<li class="clearfix">
             <div class="message-data text-right">
                 <small class="message-data-time">${username} (${time})</small>
@@ -318,3 +353,8 @@ function messageSenderTemplate(username, time, message) {
             <div class="message other-message float-right">${message}</div>
           </li>`;
 }
+
+
+
+// Làm thêm 2 phần => hiển thị tên user + thông báo khi có người tham gia nhóm chat. 
+// ý tưởng: có người tham gia nhóm chat => 
