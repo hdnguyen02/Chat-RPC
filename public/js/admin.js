@@ -35,7 +35,11 @@ async function renderHomePage(data) {
 async function renderMemberCards(userArray) {
   memberArea.innerHTML = "";
   userArray.forEach((user) => {
-    renderSingleMemberCard(user.username, user.socketID ? "Online" : "Offline",user.enable);
+    renderSingleMemberCard(
+      user.username,
+      user.socketID ? "Online" : "Offline",
+      user.enable
+    );
   });
   // Add event to user card
   $$(".table-users tbody tr td:last-child .drop-down-btn").forEach(
@@ -57,7 +61,9 @@ function renderSingleMemberCard(username, status, enable) {
       </div>
       <div class="user-info ml-3">
           <h5 class="font-weight-bold text-dark">${username}</h5>
-          <h10 class="font-weight-bold text-dark">${enable !== true ? "Đã bị khóa" : ""}</h5>
+          <h10 class="font-weight-bold text-dark">${
+            enable !== true ? "Đã bị khóa" : ""
+          }</h5>
           <div class="small">
               <div class="status-dot ${
                 status == "Online" ? "bg-success" : "bg-danger"
@@ -72,7 +78,9 @@ function renderSingleMemberCard(username, status, enable) {
           <i class="fa-solid fa-ellipsis"></i>
       </button>
       <div class="drop-down-list d-none">
-          <div class="drop-down-item lock-member">${enable !== true ? "Mở khóa" : "Khóa tài khoản"}</div>
+          <div class="drop-down-item lock-member">${
+            enable !== true ? "Mở khóa" : "Khóa tài khoản"
+          }</div>
       </div>
     </div>
   </td>
@@ -84,18 +92,11 @@ function renderSingleMemberCard(username, status, enable) {
     .addEventListener("click", function (event) {
       if (event.target.classList.contains("lock-member")) {
         // Function lock member o day
-        if(enable === true ){
-          socket.emit(
-            "lock member",
-            {memberName: username}
-          );
-        }else{
-          socket.emit(
-            "unlock member",
-            {memberName: username}
-          );
+        if (enable === true) {
+          socket.emit("lock member", { memberName: username });
+        } else {
+          socket.emit("unlock member", { memberName: username });
         }
-       
       } else {
         alert("Nope");
       }
@@ -104,7 +105,7 @@ function renderSingleMemberCard(username, status, enable) {
 }
 
 async function renderRoomCards(roomArray) {
-  roomArea.innerHTML = '';
+  roomArea.innerHTML = "";
   roomArray.forEach((room) => {
     renderSingleRoomCard(room.name, room.members.length, room.isLock);
   });
@@ -137,21 +138,25 @@ function renderSingleRoomCard(name, quantity, isLock) {
       </button>
       <div class="drop-down-list d-none">
           <div class="drop-down-item send-notify">Gửi thông báo</div>
-          <div class="drop-down-item lock-group">${isLock === false ? "Khóa phòng" : "Mở khóa phòng"}</div>
+          <div class="drop-down-item lock-group">${
+            isLock === false ? "Khóa phòng" : "Mở khóa phòng"
+          }</div>
       </div>
     </div>
   </td>
 </tr>`;
   roomArea.insertAdjacentHTML("beforeend", template);
   // Add event to dropdown item
-  const dropdownItems = roomArea.querySelectorAll("tr:last-child .drop-down-item");
+  const dropdownItems = roomArea.querySelectorAll(
+    "tr:last-child .drop-down-item"
+  );
   dropdownItems.forEach((item) => {
     item.addEventListener("click", function (event) {
       if (item.classList.contains("send-notify")) {
-        showSendNotifyModal();
+        showSendNotifyModal(name);
       } else if (item.classList.contains("lock-group")) {
-        if(isLock === false) showDialogLockRoom(name);
-        else if(isLock === true) showDialogUnlockRoom(name);
+        if (isLock === false) showDialogLockRoom(name);
+        else if (isLock === true) showDialogUnlockRoom(name);
       }
       // Hide the dropdown after clicking an item
       item.parentElement.classList.add("d-none");
@@ -304,9 +309,9 @@ function showCreateRoomModal() {
   }
 }
 
-function showSendNotifyModal() {
+function showSendNotifyModal(currentRoom) {
   console.log("Onclick Send !!!");
-  const selectedRooms = [];
+  const selectedRooms = [currentRoom];
   const modalTemplate = `<div class="modal d-block" id="sendNotifyModal">
   <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -344,9 +349,11 @@ function showSendNotifyModal() {
           <div class="user-avatar" class="w-25 h-25">
               <img src="/images/group.png" alt="">
           </div>
-          <span class="text-dark ml-4 mb-0 pointer roomNameLabel">${room.name}</span>
+          <span class="text-dark ml-4 mb-0 pointer roomNameLabel">${
+            room.name
+          }</span>
       </td>
-      <td class="invisible">
+      <td class="${room.name == currentRoom ? "visible" : "invisible"}">
           <i class="fa-solid fa-check text-success"></i>
       </td>
     </tr>`;
@@ -434,10 +441,7 @@ function showDialogLockRoom(nameRoom) {
     }
     // Confirm to look the room chat
     else if (event.target == this.querySelector("#confirm-button")) {
-      socket.emit(
-        "lock room",
-        { roomName:  nameRoom}
-      );
+      socket.emit("lock room", { roomName: nameRoom });
       $("body").removeChild(this);
     }
   });
@@ -476,18 +480,13 @@ function showDialogUnlockRoom(nameRoom) {
     }
     // Confirm to look the room chat
     else if (event.target == this.querySelector("#confirm-button")) {
-      socket.emit(
-        "unlock room",
-        { roomName:  nameRoom},
-        function () {
-          renderRoomCards(roomStorage);
-        }
-      );
+      socket.emit("unlock room", { roomName: nameRoom }, function () {
+        renderRoomCards(roomStorage);
+      });
       $("body").removeChild(this);
     }
   });
 }
-
 
 function showLoginModal() {
   const template = `<div class="modal d-block" id="loginModal" style="background-color: rgba(0, 0, 0, 0.3);">
@@ -536,6 +535,7 @@ function handleSocket(socket) {
       (prev, member) => (member.socketID ? prev + 1 : prev),
       0
     );
+    totalMemberText.textContent = userStorage.length;
   });
 
   socket.on("update rooms", function (data) {

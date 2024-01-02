@@ -2,8 +2,8 @@ import mssql from "mssql";
 
 const config = {
   user: "sa", // thay
-  password: "123456", // thay
-  server: "127.0.0.1", // thay
+  password: "123", // thay
+  server: "MSI", // thay
   database: "Chat RPC", // thay
   options: {
     encrypt: false,
@@ -203,7 +203,7 @@ function insertRoom(nameRoom, password, username) {
   });
 }
 
-function insertMemberToRoom(username, nameRoom,time) {
+function insertMemberToRoom(username, nameRoom, time) {
   return new Promise((resolve, reject) => {
     mssql.connect(config, (error) => {
       if (error) reject(error);
@@ -342,10 +342,6 @@ function unlockMember(nameMember) {
           reject(error);
         });
     });
-
-
-    
-    
   });
 }
 export {

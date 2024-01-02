@@ -3,7 +3,6 @@ import http from "http";
 import { Server } from "socket.io";
 import hbs from "hbs";
 
-
 import {
   getMembers,
   getRooms,
@@ -53,7 +52,7 @@ async function generateData(callback) {
         isLock: room.isLock,
       });
     }
-    if (callback !== null && typeof callback === 'function') {
+    if (callback !== null && typeof callback === "function") {
       console.log("Callback");
       storage.rooms.forEach((room) => {
         console.log(room.isLock);
@@ -86,48 +85,48 @@ io.on("connection", (socket) => {
   socket.on("sendUsername", (data, callback) => {
     let { username } = data;
     getMemberWithName(username)
-    .then((recordset) => {
-      let member = recordset[0];
-      if(member){
-        if(member.enable === false){
-          callback(true);
-          throw new Error("Tài khoản của bạn đã bị khóa!")
+      .then((recordset) => {
+        let member = recordset[0];
+        if (member) {
+          if (member.enable === false) {
+            callback(true);
+            throw new Error("Tài khoản của bạn đã bị khóa!");
+          }
         }
-      }
-      callback(false);
-      insertMember(username).catch((error) => {});
-      sendListRoom(socket);
-  
-      let obj = storage.members.find((user) => user.username == username);
-      if (!obj) {
-        storage.members.push({ username, enable: true, socketID: socket.id });
-      } else if (obj.socketID) {
-        let prevID = obj.socketID;
-        obj.socketID = socket.id;
-        io.sockets.sockets.get(prevID).disconnect();
-      } else {
-        obj.socketID = socket.id;
-      }
-      io.of("/admin").emit("client-login", username, storage.members);
-    })
+        callback(false);
+        insertMember(username).catch((error) => {});
+        sendListRoom(socket);
+
+        let obj = storage.members.find((user) => user.username == username);
+        if (!obj) {
+          storage.members.push({ username, enable: true, socketID: socket.id });
+        } else if (obj.socketID) {
+          let prevID = obj.socketID;
+          obj.socketID = socket.id;
+          io.sockets.sockets.get(prevID).disconnect();
+        } else {
+          obj.socketID = socket.id;
+        }
+        io.of("/admin").emit("client-login", username, storage.members);
+      })
       .catch((error) => {
         socket.emit("notify", error.message);
       });
   });
 
   socket.on("joinChatRoom", (data) => {
-    let time = formaTime(new Date())
+    let time = formaTime(new Date());
     let { nameRoom, passwordRoom, username } = data;
-      getRoomWithName(nameRoom)
+    getRoomWithName(nameRoom)
       .then((recordset) => {
         let room = recordset[0];
-        if(room.isLock === true){
-          throw new Error("Room chat đã bị khóa!")
+        if (room.isLock === true) {
+          throw new Error("Room chat đã bị khóa!");
         }
         if (room.password != passwordRoom) {
           throw new Error("Sai mật khẩu chat room!");
         }
-        return insertMemberToRoom(username, nameRoom, time) 
+        return insertMemberToRoom(username, nameRoom, time);
       })
       .then(() => {
         return getMembersOfRoom(nameRoom);
@@ -152,14 +151,12 @@ io.on("connection", (socket) => {
             members,
             logs,
           });
-          
 
-          // thông báo đến toàn bộ nhóm chat có thằng join vài. 
-        
+          // thông báo đến toàn bộ nhóm chat có thằng join vài.
 
           socket.to(nameRoom).emit("newMemberJoined", {
-            member: username, // gửi qua kia đển render. 
-            members,// thành viên mới gia nhập => nhưng không có gửi cho mình. 
+            member: username, // gửi qua kia đển render.
+            members, // thành viên mới gia nhập => nhưng không có gửi cho mình.
             time,
             sizeMembers: recordsetGetMemberOfRoom.length,
           });
@@ -177,7 +174,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", (data) => {
-        let { nameRoom, username, message } = data;
+    let { nameRoom, username, message } = data;
     let time = formaTime(new Date());
     insertLog(username, nameRoom, "SEND_MESSAGE", time, message)
       .then(() => {
@@ -227,12 +224,12 @@ io.on("connection", (socket) => {
 
   socket.on("logout Room", (data) => {
     let { curentChatRoom, username } = data;
-    console.log("Logout member " +  username + " from " + curentChatRoom);
+    console.log("Logout member " + username + " from " + curentChatRoom);
     let time = formaTime(new Date());
     LogOutRoom(curentChatRoom, username)
       .then(() => {
         sendListRoom(io);
-        socket.emit("logoutedRoom", {nameRoom: curentChatRoom});
+        socket.emit("logoutedRoom", { nameRoom: curentChatRoom });
 
         // Insert log for sending out
         insertLog(username, curentChatRoom, "SEND_OUT", time, "OUT");
@@ -247,14 +244,14 @@ io.on("connection", (socket) => {
       .then(() => {
         getMembersOfRoom(curentChatRoom)
           .then((memberRecords) => {
-            let members = memberRecords.map(
-              (member) => member.username_member
-            );
+            let members = memberRecords.map((member) => member.username_member);
             socket.to(curentChatRoom).emit("newMemberJoined", {
               members,
               sizeMembers: memberRecords.length,
             });
-            const obj = storage.rooms.find((room) => room.name === curentChatRoom);
+            const obj = storage.rooms.find(
+              (room) => room.name === curentChatRoom
+            );
             obj.members = members;
             io.of("/admin").emit("update rooms", storage.rooms);
           })
@@ -269,8 +266,6 @@ io.on("connection", (socket) => {
         socket.emit("error", { message: error.message });
       });
   });
-  
-
 });
 
 // -------ADMIN HANDLE REQUEST FROM CLIENT ------//
@@ -328,15 +323,17 @@ adminIO.on("connection", (socket) => {
   socket.on("lock room", ({ roomName }, callback) => {
     console.log("Lock room " + roomName);
     lockRoom(roomName)
-      .then(() =>{
-        const roomToChange = storage.rooms.find((room) => room.name === roomName);
+      .then(() => {
+        const roomToChange = storage.rooms.find(
+          (room) => room.name === roomName
+        );
         // Kiểm tra xem phòng có tồn tại không
         if (roomToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
           roomToChange.isLock = true; // Ví dụ: Thay đổi thuộc tính isLock thành true
           // Gửi thông báo hoặc cập nhật đến tất cả các clients, ví dụ:
           io.of("/admin").emit("update rooms", storage.rooms);
-          io.to(roomName).emit("roomBeLocked", {nameRoom: roomName});
+          io.to(roomName).emit("roomBeLocked", { nameRoom: roomName });
         } else {
           console.log("Phòng không tồn tại trong storage.rooms");
         }
@@ -349,8 +346,10 @@ adminIO.on("connection", (socket) => {
   socket.on("unlock room", ({ roomName }, callback) => {
     console.log("Unlock room " + roomName);
     unlockRoom(roomName)
-      .then(() =>{
-        const roomToChange = storage.rooms.find((room) => room.name === roomName);
+      .then(() => {
+        const roomToChange = storage.rooms.find(
+          (room) => room.name === roomName
+        );
         // Kiểm tra xem phòng có tồn tại không
         if (roomToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
@@ -367,10 +366,12 @@ adminIO.on("connection", (socket) => {
   });
 
   socket.on("lock member", ({ memberName }, callback) => {
-    console.log("Lock member " +  memberName);
-    lockMember( memberName)
+    console.log("Lock member " + memberName);
+    lockMember(memberName)
       .then(() => {
-        const memberToChange = storage.members.find((member) => member.username === memberName);
+        const memberToChange = storage.members.find(
+          (member) => member.username === memberName
+        );
         // Kiểm tra xem phòng có tồn tại không
         if (memberToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
@@ -389,10 +390,12 @@ adminIO.on("connection", (socket) => {
   });
 
   socket.on("unlock member", ({ memberName }, callback) => {
-    console.log("Unlock member " +  memberName);
-    unlockMember( memberName)
+    console.log("Unlock member " + memberName);
+    unlockMember(memberName)
       .then(() => {
-        const memberToChange = storage.members.find((member) => member.username === memberName);
+        const memberToChange = storage.members.find(
+          (member) => member.username === memberName
+        );
         // Kiểm tra xem phòng có tồn tại không
         if (memberToChange) {
           // Thực hiện các thay đổi vào thuộc tính của phòng
@@ -402,13 +405,12 @@ adminIO.on("connection", (socket) => {
         } else {
           console.log("Member không tồn tại trong storage.rooms");
         }
-        })
+      })
       .catch((error) => {
         console.log(error.message);
       });
   });
 });
-
 
 function formaTime(time) {
   var day = time.getDate().toString().padStart(2, "0");
